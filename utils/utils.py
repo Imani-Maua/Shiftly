@@ -1,4 +1,6 @@
 from datetime import datetime, date, time
+from pathlib import Path
+import json
 
 def map_label_to_time(label: str):
     label = label.lower()
@@ -11,3 +13,11 @@ def map_label_to_time(label: str):
 
 def create_datetime(date, time):
     return datetime.combine(date, time)
+
+def fetch_all_shifts():
+    base_path = Path(__file__).parent.parent
+    json_path = base_path/"config"/"shifts.json"
+    with open(json_path) as p:
+        shifts = json.load(p)['shifts']
+    return shifts
+
