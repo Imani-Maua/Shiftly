@@ -3,15 +3,8 @@ import pandas as pd
 from datetime import timedelta, datetime, date
 from app.data_class import talentAvailability
 from app.utils.utils import map_label_to_time, fetch_all_shifts
-from app.data_class import weekRange, dbCredentials
-from app.database.database import postgreDBConnection, executeQuery
-from psycopg2.extras import RealDictCursor
-from pprint import pprint
-
-
-
-
-#think about how I am going to import and use get_db() which opens a database session, and closes it
+from app.data_class import weekRange
+from app.database.database import executeQuery
 
 
 class talentRepo(ABC):
@@ -28,6 +21,7 @@ class talentRepo(ABC):
 
 class dbTalentRepo(talentRepo):
     '''
+    Class that defines how to fetch data from a database.
     
     '''
     def __init__(self, db_connection):
@@ -53,11 +47,30 @@ class dbTalentRepo(talentRepo):
 
 
 class talentDataFrameAdapter:
+     '''
+     Adapter class that transform raw data into a Pandas DataFrame.
+
+     This class serves as a transformation layer between the repository which generates 
+     raw data, and the rest of the application which operates on a DataFrame
+     '''
      @staticmethod
      def to_dataframe(talents:list) -> pd.DataFrame:
-             return pd.DataFrame(talents)
+            '''
+     Converts a list of talent records into a Pandas DataFrame
+
+     Args:
+        talents(list): A list of talent records where each record is a dictionary
+    
+    Return:
+        talents(pd.DataFrame): A Pandas dataframe which is suitable for manipulation such as
+                                filtering, grouping, and analysis.
+     '''
+            return pd.DataFrame(talents)
                 
 class filterTalents:
+    '''
+    Class that filters out talents based on whether they have active constraints or not.
+    '''
     def __init__(self, repo: pd.DataFrame, week_provider: weekRange):
         self.repo = repo
         self.week_provider = week_provider
@@ -102,6 +115,16 @@ class filterTalents:
     
 
 class talentAvailabilityDf: 
+    '''
+    Class that concatenates the manipulated talent data into a single pd.DataFrame.
+
+    Args:
+        filter_obj: pd.DataFrame object which contains infomation about clients with and without constraints
+
+    Return:
+        pd.DataFrame: Manipulated talent data concatenated.
+
+    '''
     def __init__(self, filter_obj: filterTalents):
         self.filter = filter_obj
         self.constrained = self.filter.create_constrained_df()
@@ -120,13 +143,7 @@ class talentAvailabilityDf:
         return pd.concat([self.constrained, self.unconstrained], ignore_index=True)
     
 
-credentials = dbCredentials(
-    host="localhost",
-    dbname="scheduler",
-    user="mauaimani",
-    password="WayneWilliam",
-    cursor_factory= RealDictCursor
-)
+
 
       
 def create_talent_objects(talents: pd.DataFrame, weeklyhours: float = 32) -> list[talentAvailability]:
@@ -156,24 +173,6 @@ def create_talent_objects(talents: pd.DataFrame, weeklyhours: float = 32) -> lis
     return talent_object
 
 
-psql = postgreDBConnection(credentials)
-talents= dbTalentRepo(psql)
-talent_data = talents.get_talents()
-talent_df = talentDataFrameAdapter.to_dataframe(talent_data)
-today = datetime.now()
-week = today + timedelta(days=6)
-
-
-
-week_range = weekRange(
-    start_date=today,
-    end_date=week
-)
-filterer = filterTalents(talent_df, week_range)
-all_tal = talentAvailabilityDf(filterer)
-all_talents = all_tal.combine_talents()
-
-print(create_talent_objects(all_talents))
 
        
 
