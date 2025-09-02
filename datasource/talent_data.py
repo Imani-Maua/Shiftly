@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 import pandas as pd
-from app.dataclasses.data_class import talentAvailability
-from app.utils.utils import map_label_to_time, fetch_all_shifts
-from app.database.database import executeQuery
+from entities.data_class import talentAvailability
+from utils.utils import map_label_to_time, fetch_all_shifts
+from database.database import executeQuery
 from dataclasses import dataclass
 
 class talentRepo(ABC):
@@ -20,10 +20,11 @@ class talentRepo(ABC):
 class dbTalentRepo(talentRepo):
     '''
     Class that defines how to fetch data from a database.
-    
+
     '''
     def __init__(self, db_connection):
         self.db_session = db_connection
+
     def get_talents(self) -> list:
         '''
         Fetches all the talents and their related data from the database
@@ -40,7 +41,7 @@ class dbTalentRepo(talentRepo):
             results = executeQuery.runQuery(conn, query, fetch=True)
         finally:
             self.db_session.closedb()
-        
+
         return results
 
 
@@ -48,28 +49,28 @@ class talentDataFrameAdapter:
      '''
      Adapter class that transform raw data into a Pandas DataFrame.
 
-     This class serves as a transformation layer between the repository which generates 
+     This class serves as a transformation layer between the repository which generates
      raw data, and the rest of the application which operates on a DataFrame
      '''
      @staticmethod
      def to_dataframe(talents:list) -> pd.DataFrame:
-            '''
-     Converts a list of talent records into a Pandas DataFrame
+        '''
+        Converts a list of talent records into a Pandas DataFrame
 
-     Args:
-        talents(list): A list of talent records where each record is a dictionary
-    
-    Return:
-        talents(pd.DataFrame): A Pandas dataframe which is suitable for manipulation such as
-                                filtering, grouping, and analysis.
-     '''
-            return pd.DataFrame(talents)
-                
+        Args:
+            talents(list): A list of talent records where each record is a dictionary
+
+        Return:
+            talents(pd.DataFrame): A Pandas dataframe which is suitable for manipulation such as
+                                    filtering, grouping, and analysis.
+        '''
+        return pd.DataFrame(talents)
+
 class filterTalents:
     '''
     Class that filters out talents based on whether they have active constraints or not.
     '''
-    def __init__(self, repo: pd.DataFrame, week_provider: dataclass):
+    def __init__(self, repo: pd.DataFrame, week_provider: pd.DatetimeIndex):
         self.repo = repo
         self.week_provider = week_provider
 
@@ -78,7 +79,7 @@ class filterTalents:
         returns a formmatted dataframe of talents who have constraints.
         Each row containts in the output DataFrame represents a unique talent and contains:
           talent's id: int,
-          role: str, 
+          role: str,
           date:(list[datetime.time]): list of dates a talent is available to work,
           shifts(list[shifts]): A list of shifts the talent is available to work on those dates.
 
@@ -94,10 +95,10 @@ class filterTalents:
         Returns a formatted dataframe of talents who can work anyday for any shift
         Each row containts in the output DataFrame represents a unique talent and contains:
           talent's id: int,
-          role: str, 
+          role: str,
           date:(list[datetime.time]): list of dates a talent is available to work,
           shifts(list[shifts]): A list of shifts the talent is available to work on those dates.
-        
+
         Args:
             shifts: list of all available shifts in a day
         Return:
@@ -110,9 +111,9 @@ class filterTalents:
         unconstrained.loc[:, 'available_shifts'] = [fetch_all_shifts()] * len(unconstrained)
         unconstrained = unconstrained.drop_duplicates(subset=['talent_id'])
         return unconstrained
-    
 
-class talentAvailabilityDf: 
+
+class talentAvailabilityDf:
     '''
     Class that concatenates the manipulated talent data into a single pd.DataFrame.
 
@@ -139,11 +140,11 @@ class talentAvailabilityDf:
 
         '''
         return pd.concat([self.constrained, self.unconstrained], ignore_index=True)
-    
 
 
 
-      
+
+
 def create_talent_objects(talents: pd.DataFrame, weeklyhours: float = 32) -> list[talentAvailability]:
     """
     Returns a list of talent objects from the talent dataframes
@@ -172,7 +173,7 @@ def create_talent_objects(talents: pd.DataFrame, weeklyhours: float = 32) -> lis
 
 
 
-       
 
-    
+
+
 

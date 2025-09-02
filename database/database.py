@@ -1,10 +1,9 @@
 import psycopg2
 from abc import ABC, abstractmethod
-from app.dataclasses.data_class import dbCredentials
+from entities.data_class import dbCredentials
 from psycopg2.extras import RealDictCursor
 
-
-class abstractDBConnection:
+class abstractDBConnection(ABC):
     '''Abstract class that defines the interface for opening and closing the database'''
 
     @abstractmethod
@@ -47,7 +46,7 @@ class postgreDBConnection(abstractDBConnection):
                 cursor_factory= RealDictCursor
             )
         return self.conn
-    
+
     def closedb(self):
         if self.conn:
             self.conn.close()
@@ -69,11 +68,11 @@ class executeQuery:
             conn: A connection object to the database
             query: An SQL Query that is to be executed
             fetch: A boolean which tells the method whether to fetch results or not.
-        
+
         Return:
             list of tuples or dicts: If fetch is true, it return a list of tuples or dicts.
         '''
-    
+
         cur = conn.cursor()
         try:
             cur.execute(query, params or ())
