@@ -1,45 +1,56 @@
 from abc import ABC, abstractmethod
+from app.database.database import executeQuery
+from app.dataclasses.data_class import weekRange, shiftSpecification
 import pandas as pd
-from app.database import SessionLocal
-from app.models import Shift_Period, Shift_Template, String, staffing, staffing_days
-from sqlalchemy import func, cast
-from app.utils.utils import fetch_all_shifts
-from app.data_class import weekRange
-from datetime import datetime, timedelta
-from pprint import pprint
-from app.data_class import shiftSpecification
+from app.utils.utils import fetch_staffing_req
 
 
-class shiftRepository(ABC):
+
+class shiftRepo(ABC):
 
     @abstractmethod
-    def get_shifts(self):
+    def getShifts(self):
         pass
-    def open_shifts(self):
-        pass
+    
+class dbShiftRepo(shiftRepo):
 
-class dbShiftRepository(shiftRepository):
-    def get_shifts(self) -> pd.DataFrame:
-        db = SessionLocal() #this has to be refactored
-        query = db.query(
-        Shift_Period.id.label('period_id'),
-        cast(Shift_Period.staffing, String).label("staffing"),
-        Shift_Period.label.label('shift'),
-        Shift_Period.start,
-        Shift_Period.end,
-        cast(Shift_Template.role, String).label('role'),
-        Shift_Template.count
-    ).join(Shift_Template, Shift_Period.id == Shift_Template.period_id, isouter=True)
-        shift_df = pd.read_sql(query.statement, db.bind)
-        return shift_df
+    #by the end of this class running, we have a list of dictonaries from the database which we need to transform into dataframes
+    def __init__(self, db_connection):
+        self.db_connection = db_connection
 
-class create_shift_requirements_df(weekRange):
-    def shift_requirements_df(self) -> pd.DataFrame:
-       requirement_df = pd.DataFrame({'date': [day.date() for day in self.get_week()]})
-       requirement_df.loc[:, 'day'] = [day.strftime("%A") for day in self.get_week()]
-       requirement_df.loc[:, 'staffing'] = requirement_df['day'].apply(lambda day: staffing.low.value if day in staffing_days[staffing.low] else staffing.high.value)
-       week_shifts = requirement_df.merge(self.repo[['staffing', 'shift', 'start', 'end', 'role', 'count']], on='staffing', how='left')
-       return week_shifts
+    def getShifts(self):
+        conn = self.db_connection.opendb()
+        try:
+            query = "SELECT * FROM shift_data"
+            shifts = executeQuery.runQuery(conn, query, fetch=True)
+        finally:
+            self.db_connection.closedb()
+        return shifts
+    
+
+class shiftDataFrameAdapter:
+    @staticmethod
+    def toDataFrame(shifts: list) -> pd.DataFrame:
+        return pd.DataFrame(shifts)
+
+class weekBuilder:
+    def __init__(self, week_range: weekRange, req_provider:fetch_staffing_req):
+        self.week_range = week_range
+        self.req_provider = req_provider
+    def shiftRequirements(self):
+        week = self.week_range.get_week()
+        week_df = pd.DataFrame({'date': [day.date() for day in week]})
+        week_df.loc[:, "day"] = [day.strftime("%A") for day in week]
+        staffing_req = self.req_provider
+        week_df.loc[:, "staffing"] = week_df["day"].apply(lambda day: "low" if day in staffing_req["low"] else "high")
+        return week_df
+    
+class defineShiftRequirements:
+    @staticmethod
+    def shiftRequirements(week_df: weekBuilder, shifts: pd.DataFrame) -> pd.DataFrame:
+        week_shifts = week_df.merge(shifts[['staffing', 'shift_name', 'start_time', 'end_time', 'role_name', 'role_count']], on='staffing', how='left')
+        return week_shifts
+
 
 
 def create_shift_specification(shift_requirements: pd.DataFrame) -> list[shiftSpecification]:
@@ -55,23 +66,13 @@ def create_shift_specification(shift_requirements: pd.DataFrame) -> list[shiftSp
     shift_list = shift_requirements.to_dict('records')
     shift_specification_object = []
     for shift in shift_list:
-        shift.pop('day'); shift.pop('staffing'); shift.pop('shift')
+        shift.pop('day'); shift.pop('staffing'); shift.pop('shift_name')
         shift_specification_object.append(shiftSpecification(**shift))
 
     return shift_specification_object
-today = datetime.now()
-week = today + timedelta(days=6)
-
-repo = dbShiftRepository().get_shifts()
-
-obj = create_shift_requirements_df(start_date=today, end_date=week, repo=repo).shift_requirements_df()
-print(obj)
 
 
 
-
-    
-        
         
     
     

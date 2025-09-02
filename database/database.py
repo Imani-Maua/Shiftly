@@ -1,16 +1,7 @@
 import psycopg2
 from abc import ABC, abstractmethod
-from app.data_class import dbCredentials
+from app.dataclasses.data_class import dbCredentials
 from psycopg2.extras import RealDictCursor
-
-
-'''def get_connection():
-    return psycopg2.connect(
-    host="localhost",
-    dbname="scheduler",
-    user="mauaimani",
-    password="WayneWillaim"
-)'''
 
 
 class abstractDBConnection:
@@ -25,6 +16,7 @@ class abstractDBConnection:
         pass
 
 class postgreDBConnection(abstractDBConnection):
+    #later refactor this class into a context manager
     '''
     PostgreSQL Database connection manager that handles opening and closing the database using
     psycopg2

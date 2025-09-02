@@ -1,11 +1,9 @@
 from abc import ABC, abstractmethod
 import pandas as pd
-from datetime import timedelta, datetime, date
-from app.data_class import talentAvailability
+from app.dataclasses.data_class import talentAvailability
 from app.utils.utils import map_label_to_time, fetch_all_shifts
-from app.data_class import weekRange
 from app.database.database import executeQuery
-
+from dataclasses import dataclass
 
 class talentRepo(ABC):
 
@@ -71,7 +69,7 @@ class filterTalents:
     '''
     Class that filters out talents based on whether they have active constraints or not.
     '''
-    def __init__(self, repo: pd.DataFrame, week_provider: weekRange):
+    def __init__(self, repo: pd.DataFrame, week_provider: dataclass):
         self.repo = repo
         self.week_provider = week_provider
 
@@ -105,7 +103,7 @@ class filterTalents:
         Return:
             Dataframe: formmatted dataframe of unconstrained talents.
         '''
-        unconstrained = self.repo.copy()
+        unconstrained = self.repo.loc[(self.repo['constraint_status'].isna())].copy()
         unconstrained.loc[:, 'available_date'] = [list(self.week_provider.get_week())] * len(unconstrained)
         unconstrained['available_date'] = unconstrained['available_date'].apply(lambda lst: [d.date() for d in lst])
         unconstrained = unconstrained[['talent_id', 'tal_role', 'available_date']]

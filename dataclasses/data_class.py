@@ -23,10 +23,10 @@ class dbCredentials:
 @dataclass
 class shiftSpecification:
     date : date
-    start: time
-    end: time
-    role: Role
-    count: int
+    start_time: time
+    end_time: time
+    role_name: Role
+    role_count: int
 
 @dataclass
 class assignment:
@@ -39,6 +39,17 @@ class talentAvailability:
     role: Role
     window: dict[date, list[tuple[time, time]]]
     weeklyhours: float
+    
+@dataclass
+class eligibleTalents:
+    shift_date: date
+    start_time: time
+    end_time: time
+    talents: list
+@dataclass
+class shiftInfo:
+    role_count: int
+    shift_info: eligibleTalents
 
 @dataclass
 class weekRange:
@@ -83,7 +94,10 @@ class weekRange:
         '''
         return self.date_map
     
+
+
     
+
         
 
     

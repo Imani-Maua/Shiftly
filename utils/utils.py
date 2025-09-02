@@ -21,3 +21,13 @@ def fetch_all_shifts():
         shifts = json.load(p)['shifts']
     return shifts
 
+def fetch_staffing_req():
+    base_path = Path(__file__).parent.parent
+    json_path = base_path/"config"/"staffing.json"
+    with open(json_path) as p:
+        staffing = json.load(p)['staffing']
+        return staffing
+
+
+
+

@@ -1,3 +1,5 @@
+-- This file creates all the tables in the schema
+
 CREATE TABLE talents(
     id SERIAL PRIMARY KEY,
     firstname VARCHAR(50),
