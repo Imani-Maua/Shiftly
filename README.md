@@ -47,8 +47,8 @@ app/
 ├── scripts/
 │   └── demo.py
 ├── config/
-│   ├── shifts.json        # Shift labels and time mapping
-│   └── staffing.json      # Staffing requirements per day
+│   ├── shifts.json      
+│   └── staffing.json
 ├── utils/
 │   ├── __init__.py
 │   └── utils.py
