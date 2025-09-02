@@ -1,0 +1,5 @@
+{
+    "staffing":
+    {"low": ["Monday", "Tuesday", "Wednesday", "Thursday"],
+    "high": ["Friday", "Saturday", "Sunday"]}
+}
