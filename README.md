@@ -23,3 +23,33 @@ Shiftly is a **shift scheduling MVP** designed to allocate employees (who Shiftl
 - Employee request handling.
 
 ---
+## Project Structure
+
+app/
+├── database/
+│   ├── __init__.py
+│   ├── database.py
+│   ├── schema.sql
+│   └── seed.sql
+├── dataclasses/
+│   ├── __init__.py
+│   └── data_class.py
+├── datasource/
+│   ├── __init__.py
+│   ├── request_data.py
+│   ├── shift_data.py
+│   └── talent_data.py
+├── scheduler/
+│   ├── __init__.py
+│   ├── rules.py
+│   └── shift_allocator.py
+├── scripts/
+│   └── demo.py
+├── config/
+│   ├── shifts.json        # Shift labels and time mapping
+│   └── staffing.json      # Staffing requirements per day
+├── utils/
+│   ├── __init__.py
+│   └── utils.py
+└── __init__.py
+run_shiftly.py

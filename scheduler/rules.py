@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from entities.data_class import talentAvailability, shiftSpecification
+from app.entities.entities import talentAvailability, shiftSpecification
+from datetime import date
 
 class Constraints(ABC):
     @abstractmethod
@@ -20,11 +21,11 @@ class dailyAssignmentTracker(Constraints):
     def __init__(self):
         self.assigned = set()
 
-    def mark_assigned(self, talent: talentAvailability, shift: shiftSpecification):
-        self.assigned.add((talent.talent_id, shift.date))
+    def mark_assigned(self, talent_id: int, shift_date: date):
+        self.assigned.add((talent_id, shift_date))
 
-    def check(self, talent: talentAvailability, shift: shiftSpecification) -> bool:
-        return (talent.talent_id, shift.date) in self.assigned
+    def check(self, talent: int, shift_date: date) -> bool:
+        return (talent, shift_date) in self.assigned
 
 #a list of rules that a talent must satisfy before being assigned to a shift
 eligibility_rules = [roleShiftValidator(), dateMatcher()]

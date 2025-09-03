@@ -1,31 +1,21 @@
 from abc import ABC, abstractmethod
 import pandas as pd
-from entities.data_class import talentAvailability
-from utils.utils import map_label_to_time, fetch_all_shifts
-from database.database import executeQuery
-from dataclasses import dataclass
+from app.entities.entities import talentAvailability
+from app.utils.utils import map_label_to_time, fetch_all_shifts
+from app.database.database import dbDataRepo, generateDataRepo
 
-class talentRepo(ABC):
 
-    '''
-    Abstract base class for a TalentRepository
 
-    Defines the interface for fetching talent data
-    '''
-    @abstractmethod
-    def get_talents(self):
 
-        pass
-
-class dbTalentRepo(talentRepo):
+class dbTalentRepo(dbDataRepo):
     '''
     Class that defines how to fetch data from a database.
 
     '''
-    def __init__(self, db_connection):
-        self.db_session = db_connection
+    def __init__(self, conn):
+        self.conn = conn
 
-    def get_talents(self) -> list:
+    def getData(self) -> list[dict]:
         '''
         Fetches all the talents and their related data from the database
 
@@ -35,36 +25,10 @@ class dbTalentRepo(talentRepo):
         Returns:
             list: list[psycopg2.extras.RealDictRow]
         '''
-        conn = self.db_session.opendb()
-        try:
-            query = "SELECT * FROM talent_data"
-            results = executeQuery.runQuery(conn, query, fetch=True)
-        finally:
-            self.db_session.closedb()
+        query = "SELECT * FROM talent_data"
+        talent_repo = generateDataRepo(query, self.conn)
+        return talent_repo.retrieveData()
 
-        return results
-
-
-class talentDataFrameAdapter:
-     '''
-     Adapter class that transform raw data into a Pandas DataFrame.
-
-     This class serves as a transformation layer between the repository which generates
-     raw data, and the rest of the application which operates on a DataFrame
-     '''
-     @staticmethod
-     def to_dataframe(talents:list) -> pd.DataFrame:
-        '''
-        Converts a list of talent records into a Pandas DataFrame
-
-        Args:
-            talents(list): A list of talent records where each record is a dictionary
-
-        Return:
-            talents(pd.DataFrame): A Pandas dataframe which is suitable for manipulation such as
-                                    filtering, grouping, and analysis.
-        '''
-        return pd.DataFrame(talents)
 
 class filterTalents:
     '''
@@ -170,10 +134,5 @@ def create_talent_objects(talents: pd.DataFrame, weeklyhours: float = 32) -> lis
                 weeklyhours=weeklyhours
             ))
     return talent_object
-
-
-
-
-
 
 

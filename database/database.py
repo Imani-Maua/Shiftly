@@ -1,56 +1,61 @@
 import psycopg2
 from abc import ABC, abstractmethod
-from entities.data_class import dbCredentials
+from app.entities.entities import dbCredentials
 from psycopg2.extras import RealDictCursor
+import pandas as pd
 
-class abstractDBConnection(ABC):
+class abstractDBContextManager(ABC):
     '''Abstract class that defines the interface for opening and closing the database'''
 
     @abstractmethod
-    def opendb(self):
+    def __enter__(self):
         pass
 
     @abstractmethod
-    def closedb(self):
+    def __exit__(self, exc_type, exc_value, exc_traceback):
         pass
 
-class postgreDBConnection(abstractDBConnection):
-    #later refactor this class into a context manager
-    '''
-    PostgreSQL Database connection manager that handles opening and closing the database using
-    psycopg2
 
-    Attrtibutes:
-        config(dbConfig): A dataclass containing dabase configuration (host, dbname, user, password, cursor_factory)
 
-        conn(psycopg2.extenstion.connection|None): The active database connection. Initialized as None
-        and set when opendb() is called.
+def postgreCredentials():
+        credentials = dbCredentials(
+    host= "localhost",
+    dbname= "*******",
+    user= "******",
+    password= "******",
+    cursor_factory= RealDictCursor
+)
+        return credentials
 
-    Methods:
-        opendb():
-            Opens a connection to PostgrSQL Database if one is not opened already and returns a connection object
-        closedb():
-            Closes an active database connection if it exists and resets 'conn' to None
-    '''
+
+class postgreContextManager(abstractDBContextManager):
     def __init__(self, creds: dbCredentials):
         self.creds = creds
         self.conn = None
 
-    def opendb(self):
+    def __enter__(self):
         if not self.conn:
-            self.conn =psycopg2.connect(
-                host = self.creds.host,
+            self.conn = psycopg2.connect(host = self.creds.host,
                 dbname= self.creds.dbname,
                 user=self.creds.user,
                 password = self.creds.password,
-                cursor_factory= RealDictCursor
-            )
+                cursor_factory= RealDictCursor)
         return self.conn
-
-    def closedb(self):
-        if self.conn:
-            self.conn.close()
+    
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        try:
+            if exc_type:
+                self.conn.rollback()
+            else:
+                self.conn.commit()
+        finally:
+            try:
+                self.conn.close()
+            except Exception as close_exc:
+                print(f'Warning: Error closing connection {close_exc}')
             self.conn = None
+
+        
 
 class executeQuery:
     '''
@@ -77,34 +82,46 @@ class executeQuery:
         try:
             cur.execute(query, params or ())
             result = cur.fetchall() if fetch else None
-            conn.commit()
             return result
         finally:
             cur.close()
 
 
+class generateDataRepo:
+
+    def __init__(self, query: str, conn: postgreContextManager):
+        self.query = query
+        self.conn = conn
+    
+    def retrieveData(self):
+        with self.conn as manager:
+            return executeQuery.runQuery(manager, self.query, fetch=True)
 
 
+class dbDataRepo(ABC):
 
-### queries go here then inject the queries into the runQuery method
-
-### runQuery executes the SQL statement and closes the cursor pointer
-
-### psql.closedb() will close the db
-
+    @abstractmethod
+    def getData(self):
+        pass
 
 
-'''
-To open a database, write commands, then execute them, this has to happen:
-con = psycopg2.connect() -> connects to the database after logging in
-cur = con.cursor() ->allows python code to execute PostgreSQL. It represents a context
-                    for executing SQL statements within a connection
+class dataFrameAdapter:
+     '''
+     Adapter class that transform raw data into a Pandas DataFrame.
 
-cur.execute() -> this is where you pass in SQL statements to be executed
-cur.commit() -> this commits any pending transactions the the database
-cur.close() ->  this closes the cursor context
-con.close() -> closes the database connection
+     This class serves as a transformation layer between the repository which generates
+     raw data, and the rest of the application which operates on a DataFrame
+     '''
+     @staticmethod
+     def to_dataframe(data:list) -> pd.DataFrame:
+        '''
+        Converts a list of talent records into a Pandas DataFrame
 
+        Args:
+            talents(list): A list of talent records where each record is a dictionary
 
-
-'''
+        Return:
+            talents(pd.DataFrame): A Pandas dataframe which is suitable for manipulation such as
+                                    filtering, grouping, and analysis.
+        '''
+        return pd.DataFrame(data)

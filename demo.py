@@ -1,74 +1,108 @@
-from database.database import dbCredentials, postgreDBConnection
-from datasource.talent_data import dbTalentRepo, talentDataFrameAdapter, filterTalents, talentAvailabilityDf, create_talent_objects
-from psycopg2.extras import RealDictCursor
+import pandas as pd
+from app.database.database import postgreContextManager, postgreCredentials, dataFrameAdapter
+from app.datasource.talent_data import dbTalentRepo, filterTalents, talentAvailabilityDf, create_talent_objects
 from datetime import datetime, timedelta
-from entities.data_class import weekRange
-from datasource.shift_data import dbShiftRepo, shiftDataFrameAdapter, weekBuilder,defineShiftRequirements, create_shift_specification
-from utils.utils import fetch_staffing_req
-from scheduler.rules import eligibility_rules, dailyAssignmentTracker
-from scheduler.shift_allocator import shiftAllocator, eligibleTalentFinder
-
-
-
-def fetch_shifts():
-    credentials = dbCredentials(
-    cursor_factory= RealDictCursor
-)
-    conn = postgreDBConnection(credentials)
-    repo = dbShiftRepo(conn)
-    shifts = repo.getShifts()
-    today = datetime.now()
-    week = today + timedelta(days=6)
-    shift_df = shiftDataFrameAdapter.toDataFrame(shifts)
-
-
-    week = weekRange(
-        start_date=today,
-        end_date=week
-    )
-    staffing = fetch_staffing_req()
-    shift_week = weekBuilder(week, staffing)
-    shift_week1 = shift_week.shiftRequirements()
-    shifts = defineShiftRequirements.shiftRequirements(shift_week1, shift_df)
-    shift_specs = create_shift_specification(shifts)
-    return shift_specs
-
-
-def fetch_talents():
-    credentials = dbCredentials(
-    cursor_factory= RealDictCursor
-)
-
-    psql = postgreDBConnection(credentials)
-    talents= dbTalentRepo(psql)
-    talent_data = talents.get_talents()
-    talent_df = talentDataFrameAdapter.to_dataframe(talent_data)
-    today = datetime.now()
-    week = today + timedelta(days=6)
-
-    week_range = weekRange(
-        start_date=today,
-        end_date=week
-    )
-    filterer = filterTalents(talent_df, week_range)
-    all_tal = talentAvailabilityDf(filterer)
-    all_talents = all_tal.combine_talents()
-
-    my_talents = create_talent_objects(all_talents)
-    return my_talents
+from app.entities.entities import weekRange
+from app.datasource.shift_data import dbShiftRepo, weekBuilder,defineShiftRequirements, create_shift_specification
+from app.utils.utils import fetch_staffing_req
+from pprint import pprint
+from app.scheduler.shift_allocator import eligibleTalentFinder, shiftAllocator
+from app.scheduler.rules import eligibility_rules, dailyAssignmentTracker
 
 
 
 
+class DataRetriever():
+    def __init__(self, repo):
+        self.repo = repo
 
-shifts = fetch_shifts()
-talents = fetch_shifts()
-foundTalents = eligibleTalentFinder(talents, shifts, eligibility_rules)
-shift_info = foundTalents.get_available_talents_per_shift()
-shift_allocator = shiftAllocator(shift_info, dailyAssignmentTracker())
+    def fetch_data(self):
+        credentials = postgreCredentials()
+        conn = postgreContextManager(credentials)
+        retrieve_repo = self.repo(conn)
+        data = retrieve_repo.getData()
+        return data
+
+class BuildDataFrame():
+    def __init__(self, raw_data):
+        self.raw_data = raw_data
+
+    def convertToDataFrame(self):
+        to_df = dataFrameAdapter.to_dataframe(self.raw_data)
+        return to_df
+    
+class defineShiftWeek():
+    @staticmethod
+    def week_for_schedule():
+        today = datetime.now()
+        week = today + timedelta(days=6)
+        week = weekRange(
+            start_date=today,
+            end_date=week
+        )
+        return week
+
+class talentDataManager():
+    def __init__(self,talents_df, week_range):
+        self.talents_df = talents_df
+        self.week_range = week_range
+    def generate_talent_objects(self):
+        filterer = filterTalents(self.talents_df, self.week_range)
+        all_tal = talentAvailabilityDf(filterer)
+        all_talents = all_tal.combine_talents()
+
+        my_talents = create_talent_objects(all_talents)
+        return my_talents
+    
+class shiftDataManager():
+    def __init__(self, shift_df, week_range):
+        self.shift_df = shift_df
+        self.week_range = week_range
+    
+    def generate_shift_objects(self):
+        staffing = fetch_staffing_req()
+        weekly_builder = weekBuilder(self.week_range, staffing)
+        weekly_req = weekly_builder.shiftRequirements()
+        shifts = defineShiftRequirements.shiftRequirements(weekly_req, shift_df)
+        shift_specs = create_shift_specification(shifts)
+        return shift_specs
 
 
-print(shift_allocator)
+#database connection and data retrival
+credentials = postgreCredentials() 
+conn = postgreContextManager(credentials) 
+
+#generate week dates for the schedule
+schedule_week = defineShiftWeek.week_for_schedule()
+
+#processing shift data
+shift_data = DataRetriever(dbShiftRepo).fetch_data()
+process_shift= BuildDataFrame(shift_data)
+shift_df = process_shift.convertToDataFrame()
+process_shift_df = shiftDataManager(shift_df, schedule_week)
+shift_objects = process_shift_df.generate_shift_objects()
+
+
+#processing talent data
+talent_data = DataRetriever(dbTalentRepo).fetch_data() 
+process_talent = BuildDataFrame(talent_data)
+talent_df = process_talent.convertToDataFrame()
+process_talent_df = talentDataManager(talent_df, schedule_week)
+talent_objects = process_talent_df.generate_talent_objects()
+
+#generating the schedule using a greedy fcfs algorithm
+talent_shift_eligible = eligibleTalentFinder(talent_objects, shift_objects, eligibility_rules)
+talents_per_shift = talent_shift_eligible.get_available_talents_per_shift()
+shift_allocator = shiftAllocator(talents_per_shift, dailyAssignmentTracker())
+all_shifts = shift_allocator.allocate_shifts()
+pprint(all_shifts)
+
+
+
+
+
+
+
 
 
 

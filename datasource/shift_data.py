@@ -1,37 +1,21 @@
 from abc import ABC, abstractmethod
 import pandas as pd
-from database.database import executeQuery
-from entities.data_class import weekRange, shiftSpecification
-from utils.utils import fetch_staffing_req
-from typing import Callable
+from app.database.database import postgreContextManager,generateDataRepo, postgreCredentials, dbDataRepo
+from app.entities.entities import weekRange, shiftSpecification
+from app.utils.utils import fetch_staffing_req
 
 
-class shiftRepo(ABC):
 
-    @abstractmethod
-    def getShifts(self):
-        pass
+class dbShiftRepo(dbDataRepo):
+    def __init__(self, conn):
+        self.conn = conn
 
-class dbShiftRepo(shiftRepo):
-
-    #by the end of this class running, we have a list of dictonaries from the database which we need to transform into dataframes
-    def __init__(self, db_connection):
-        self.db_connection = db_connection
-
-    def getShifts(self):
-        conn = self.db_connection.opendb()
-        try:
-            query = "SELECT * FROM shift_data"
-            shifts = executeQuery.runQuery(conn, query, fetch=True)
-        finally:
-            self.db_connection.closedb()
-        return shifts
+    def getData(self):
+        query = "SELECT * FROM shift_data"
+        repo = generateDataRepo(query, self.conn)
+        return repo.retrieveData()
 
 
-class shiftDataFrameAdapter:
-    @staticmethod
-    def toDataFrame(shifts: list) -> pd.DataFrame:
-        return pd.DataFrame(shifts)
 
 class weekBuilder:
     def __init__(self, week_range: weekRange, req_provider):

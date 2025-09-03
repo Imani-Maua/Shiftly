@@ -1,5 +1,5 @@
-from entities.data_class import eligibleTalents, shiftSpecification, assignment, shiftInfo, talentAvailability
-from scheduler.rules import RulesEvaluator, dailyAssignmentTracker, Constraints
+from app.entities.entities import eligibleTalents, shiftSpecification, assignment, shiftInfo, talentAvailability
+from app.scheduler.rules import RulesEvaluator, dailyAssignmentTracker, Constraints
 
 class eligibleTalentFinder():
     def __init__(self, talents: list[talentAvailability], shifts: list[shiftSpecification], rules: list[Constraints]):
