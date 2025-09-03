@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
-from app.database.database import executeQuery
-from app.dataclasses.data_class import weekRange, shiftSpecification
 import pandas as pd
-from app.utils.utils import fetch_staffing_req
-
+from database.database import executeQuery
+from entities.data_class import weekRange, shiftSpecification
+from utils.utils import fetch_staffing_req
+from typing import Callable
 
 
 class shiftRepo(ABC):
@@ -11,7 +11,7 @@ class shiftRepo(ABC):
     @abstractmethod
     def getShifts(self):
         pass
-    
+
 class dbShiftRepo(shiftRepo):
 
     #by the end of this class running, we have a list of dictonaries from the database which we need to transform into dataframes
@@ -26,7 +26,7 @@ class dbShiftRepo(shiftRepo):
         finally:
             self.db_connection.closedb()
         return shifts
-    
+
 
 class shiftDataFrameAdapter:
     @staticmethod
@@ -34,20 +34,20 @@ class shiftDataFrameAdapter:
         return pd.DataFrame(shifts)
 
 class weekBuilder:
-    def __init__(self, week_range: weekRange, req_provider:fetch_staffing_req):
+    def __init__(self, week_range: weekRange, req_provider):
         self.week_range = week_range
         self.req_provider = req_provider
-    def shiftRequirements(self):
+    def shiftRequirements(self): #rename the method
         week = self.week_range.get_week()
         week_df = pd.DataFrame({'date': [day.date() for day in week]})
         week_df.loc[:, "day"] = [day.strftime("%A") for day in week]
         staffing_req = self.req_provider
         week_df.loc[:, "staffing"] = week_df["day"].apply(lambda day: "low" if day in staffing_req["low"] else "high")
         return week_df
-    
+
 class defineShiftRequirements:
     @staticmethod
-    def shiftRequirements(week_df: weekBuilder, shifts: pd.DataFrame) -> pd.DataFrame:
+    def shiftRequirements(week_df: pd.DataFrame, shifts: pd.DataFrame) -> pd.DataFrame:
         week_shifts = week_df.merge(shifts[['staffing', 'shift_name', 'start_time', 'end_time', 'role_name', 'role_count']], on='staffing', how='left')
         return week_shifts
 
@@ -73,8 +73,8 @@ def create_shift_specification(shift_requirements: pd.DataFrame) -> list[shiftSp
 
 
 
-        
-    
-    
-    
+
+
+
+
 

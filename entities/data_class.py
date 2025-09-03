@@ -39,13 +39,14 @@ class talentAvailability:
     role: Role
     window: dict[date, list[tuple[time, time]]]
     weeklyhours: float
-    
+
 @dataclass
 class eligibleTalents:
     shift_date: date
     start_time: time
     end_time: time
-    talents: list
+    talents: list[talentAvailability]
+
 @dataclass
 class shiftInfo:
     role_count: int
@@ -54,9 +55,9 @@ class shiftInfo:
 @dataclass
 class weekRange:
     '''
-     Represents a range of dates within a week and provides helper methods to 
+     Represents a range of dates within a week and provides helper methods to
      access the week as a date range and as a mapping from weekday names to dates
-      
+
      Attributes:
             start_date(str) : starting day of the week (string format, parsed to datetime)
             end_date(str) : ending day of the week (string format, parsed to datetime)
@@ -71,14 +72,14 @@ class weekRange:
     date_map: dict = field(init=False)
     def __post_init__(self) -> None:
         '''
-        Converts start_date and end_date to datetime.date objects, 
+        Converts start_date and end_date to datetime.date objects,
         generates the range and builds the day to date mapping
         '''
         self.start_date = pd.to_datetime(self.start_date)
         self.end_date = pd.to_datetime(self.end_date)
         self.week = pd.date_range(self.start_date, self.end_date)
         self.date_map = {day.strftime("%A"): day for day in self.week}
-        
+
 
     def get_week(self) ->pd.DatetimeIndex:
         '''
@@ -86,18 +87,17 @@ class weekRange:
             pd.DatetimeIndex: The week as a pandas date range
         '''
         return self.week
-    
+
     def get_date_map(self) ->dict[str, pd.Timestamp]:
         '''
         Returns:
-            dict[str, pd.Timestamp]: a dictionary mapping of days of the week to their corresponding date 
+            dict[str, pd.Timestamp]: a dictionary mapping of days of the week to their corresponding date
         '''
         return self.date_map
-    
 
 
-    
 
-        
 
-    
+
+
+
