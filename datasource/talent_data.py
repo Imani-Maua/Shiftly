@@ -1,10 +1,9 @@
 from abc import ABC, abstractmethod
 import pandas as pd
-from app.entities.entities import talentAvailability
+from app.entities.entities import talentAvailability, weekRange
 from app.utils.utils import map_label_to_time, fetch_all_shifts
 from app.database.database import dbDataRepo, generateDataRepo
-
-
+from datetime import datetime
 
 
 class dbTalentRepo(dbDataRepo):
@@ -34,7 +33,7 @@ class filterTalents:
     '''
     Class that filters out talents based on whether they have active constraints or not.
     '''
-    def __init__(self, repo: pd.DataFrame, week_provider: pd.DatetimeIndex):
+    def __init__(self, repo: pd.DataFrame, week_provider: weekRange):
         self.repo = repo
         self.week_provider = week_provider
 
@@ -52,7 +51,7 @@ class filterTalents:
         '''
         constrained = self.repo.groupby(['talent_id', 'available_day']).agg({'available_shifts': lambda x: list(set(x)), 'tal_role': 'first'}).reset_index().copy()
         constrained.loc[:, 'available_date'] = constrained['available_day'].map(self.week_provider.get_date_map()).dt.date
-        return constrained.groupby('talent_id').agg({'talent_id': 'first', 'tal_role': 'first', 'available_date': list, 'available_shifts': 'first'})
+        return constrained.groupby('talent_id').agg({'talent_id': 'first', 'tal_role': 'first', 'available_date': list, 'available_shifts': 'first'}).drop_duplicates(subset=['talent_id'])
 
     def create_unconstrained_df(self) -> pd.DataFrame:
         '''
@@ -122,17 +121,17 @@ def create_talent_objects(talents: pd.DataFrame, weeklyhours: float = 32) -> lis
     talent_object = []
     for talent in talent_list:
         for date in list(talent.get('available_date', [])):
-            window: dict = {}
-            window[date] = []
             for shift in list(talent.get('available_shifts', [])):
                 shift_span = map_label_to_time(shift)
-                window[date].append(shift_span)
-            talent_object.append(talentAvailability(
-                talent_id=talent.get('talent_id'),
-                role=talent.get('tal_role'),
-                window=window,
-                weeklyhours=weeklyhours
-            ))
+                talent_object.append(
+                    talentAvailability(
+                    talent_id=talent.get('talent_id'),
+                    role=talent.get('tal_role'),
+                    shift_name=talent.get('available_shifts'),
+                    window=(datetime.combine(date, shift_span[0]), datetime.combine(date, shift_span[1])),
+                    weeklyhours=weeklyhours
+                                    ))
     return talent_object
+
 
 

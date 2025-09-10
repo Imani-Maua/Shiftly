@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from datetime import date, time
+from datetime import date, time, datetime
 import enum
 import pandas as pd
 import psycopg2.extras
@@ -20,37 +20,28 @@ class dbCredentials:
     password: str
     cursor_factory: Type = psycopg2.extras.RealDictCursor
 
-@dataclass
-class shiftSpecification:
-    date : date
-    start_time: time
-    end_time: time
-    role_name: Role
-    role_count: int
+
 
 @dataclass
-class assignment:
-    talent_id : int
-    shift : shiftSpecification
+class shiftSpecification:
+    start_time: datetime
+    end_time: datetime
+    shift_name: str
+    role_name: Role
+    role_count: int
 
 @dataclass
 class talentAvailability:
     talent_id: int
     role: Role
-    window: dict[date, list[tuple[time, time]]]
+    shift_name: str
+    window: tuple[datetime, datetime] 
     weeklyhours: float
 
 @dataclass
-class eligibleTalents:
-    shift_date: date
-    start_time: time
-    end_time: time
-    talents: list[talentAvailability]
-
-@dataclass
-class shiftInfo:
-    role_count: int
-    shift_info: eligibleTalents
+class assignment:
+    talent_id : int
+    shift : shiftSpecification
 
 @dataclass
 class weekRange:

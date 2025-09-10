@@ -1,68 +1,38 @@
-from app.entities.entities import eligibleTalents, shiftSpecification, assignment, shiftInfo, talentAvailability
-from app.scheduler.rules import RulesEvaluator, dailyAssignmentTracker, Constraints
+from app.entities.entities import shiftSpecification, assignment
+from app.scheduler.rules import TalentGenerator, talentByRole, dailyAssignmentTracker
+from datetime import date
 
-class eligibleTalentFinder():
-    def __init__(self, talents: list[talentAvailability], shifts: list[shiftSpecification], rules: list[Constraints]):
-        self.talents = talents
-        self.shifts = shifts
-        self.rules = rules
 
-    def get_available_talents_per_shift(self):
-        eligible_shifts: list[shiftInfo] = []
 
-        for shift in self.shifts:
-            shift_talents = (eligibleTalents(
-                        shift_date=shift.date,
-                        start_time= shift.start_time,
-                        end_time=shift.end_time,
-                        talents=[]
-                    ))
-
-            shift_info = (shiftInfo(role_count=shift.role_count, shift_info=shift_talents))
-            for talent in self.talents:
-                evaluator = RulesEvaluator(self.rules, talent, shift)
-                if evaluator.all_pass():
-                    shift_talents.talents.append(talent)
-            eligible_shifts.append(shift_info)
-
-        return eligible_shifts
 
 class shiftAllocator():
-    def __init__(self, shift_info: list[shiftInfo], daily_checker: dailyAssignmentTracker):
-        self.shift_info = shift_info
-        self.daily_checker = daily_checker
+    def __init__(self, assignable_shifts: list[shiftSpecification], talents_to_assign: dict[str, list[talentByRole]], lookup: dict[tuple[int, date], tuple[date, date]], generator: TalentGenerator, tracker:dailyAssignmentTracker):
+        self.talents_to_assign = talents_to_assign
+        self.assignable_shifts = assignable_shifts
+        self.lookup = lookup
+        self.generator = generator
+        self.tracker = tracker
 
-
-    def allocate_shifts(self) ->list:
-        assignedShifts = []
-        for eligible_shift in self.shift_info:
+    def allocate_shifts(self):
+        assigned = []
+        for shift in self.assignable_shifts: 
             num_assigned = 0
-            for talent in eligible_shift.shift_info.talents:
-                if not self.daily_checker.check(talent.talent_id, eligible_shift.shift_info.shift_date):
-                    assignedShifts.append(assignment(
-                    talent_id=talent.talent_id,
-                    shift=shiftSpecification(
-                        date=eligible_shift.shift_info.shift_date,
-                        start_time=eligible_shift.shift_info.start_time,
-                        end_time=eligible_shift.shift_info.end_time,
-                        role_name=talent.role,
-                        role_count=eligible_shift.role_count
-                    )
-                ))
-                num_assigned += 1
-                self.daily_checker.mark_assigned(talent.talent_id, eligible_shift.shift_info.shift_date)
-
-                if num_assigned >= eligible_shift.role_count:
+            generate = self.generator(shift, self.talents_to_assign, self.lookup) 
+            candidates = list(generate.find_eligible_talents())
+            for talent_id in candidates:
+                if not self.tracker.check(talent_id, shift.start_time.date()):
+                    assigned.append(assignment(talent_id=talent_id, shift=shift))
+                    self.tracker.mark_assigned(talent_id, shift.start_time.date())
+                    num_assigned += 1
+                if num_assigned >= shift.role_count:
                     break
-
-        return assignedShifts
-
-
+        
+        return assigned
 
 
 
 
-
+            
 
 
 
@@ -71,10 +41,11 @@ class shiftAllocator():
 
 
 
+class unAssignedShiftTracker():
 
-
-
-
+    @staticmethod
+    def get_unassigned_shifts(schedule: list[assignment], shifts: list[shiftSpecification]):
+        return [shift for shift in shifts if shift not in [a.shift for a in schedule]]
 
 
 

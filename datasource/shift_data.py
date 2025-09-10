@@ -3,7 +3,7 @@ import pandas as pd
 from app.database.database import postgreContextManager,generateDataRepo, postgreCredentials, dbDataRepo
 from app.entities.entities import weekRange, shiftSpecification
 from app.utils.utils import fetch_staffing_req
-
+from datetime import datetime
 
 
 class dbShiftRepo(dbDataRepo):
@@ -50,8 +50,15 @@ def create_shift_specification(shift_requirements: pd.DataFrame) -> list[shiftSp
     shift_list = shift_requirements.to_dict('records')
     shift_specification_object = []
     for shift in shift_list:
-        shift.pop('day'); shift.pop('staffing'); shift.pop('shift_name')
-        shift_specification_object.append(shiftSpecification(**shift))
+        shift.pop('day'); shift.pop('staffing')
+        shift_specification_object.append(shiftSpecification(
+            start_time=datetime.combine(shift['date'], shift['start_time']),
+            end_time=datetime.combine(shift['date'], shift['end_time']),
+            shift_name=shift['shift_name'],
+            role_name=shift['role_name'],
+            role_count=shift['role_count']
+        ))
+        
 
     return shift_specification_object
 

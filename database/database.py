@@ -19,10 +19,10 @@ class abstractDBContextManager(ABC):
 
 def postgreCredentials():
         credentials = dbCredentials(
-    host= "localhost",
-    dbname= "*******",
-    user= "******",
-    password= "******",
+    host= "*",
+    dbname= "*",
+    user= "*",
+    password= "*",
     cursor_factory= RealDictCursor
 )
         return credentials
