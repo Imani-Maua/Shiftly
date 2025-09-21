@@ -33,6 +33,7 @@ class shiftSpecification:
 @dataclass
 class talentAvailability:
     talent_id: int
+    constraint: bool
     role: Role
     shift_name: str
     window: dict[datetime, tuple[datetime, datetime]] 
