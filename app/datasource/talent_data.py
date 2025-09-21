@@ -49,9 +49,11 @@ class filterTalents:
         Return:
             Dataframe: Aggregated and formmatted Dataframe of constrained talents
         '''
-        constrained = self.repo.groupby(['talent_id', 'available_day']).agg({'available_shifts': lambda x: list(set(x)), 'tal_role': 'first','hours': 'first'}).reset_index().copy()
+        constrained = self.repo.loc[(self.repo['constraint_status'].notna())].copy()
+        constrained = constrained.groupby(['talent_id','constraint_status', 'available_day']).agg({'available_shifts': lambda x: list(set(x)), 'tal_role': 'first','hours': 'first'}).reset_index()
+        print(constrained.columns)
         constrained.loc[:, 'available_date'] = constrained['available_day'].map(self.week_provider.get_date_map()).dt.date
-        return constrained.groupby('talent_id').agg({'talent_id': 'first', 'tal_role': 'first','hours': 'first', 'available_date': list, 'available_shifts': 'first'}).drop_duplicates(subset=['talent_id'])
+        return constrained.groupby('talent_id').agg({'talent_id': 'first', 'constraint_status': 'first' ,'tal_role': 'first','hours': 'first', 'available_date': list, 'available_shifts': 'first'}).drop_duplicates(subset=['talent_id'])
 
     def create_unconstrained_df(self) -> pd.DataFrame:
         '''
@@ -70,7 +72,7 @@ class filterTalents:
         unconstrained = self.repo.loc[(self.repo['constraint_status'].isna())].copy()
         unconstrained.loc[:, 'available_date'] = [list(self.week_provider.get_week())] * len(unconstrained)
         unconstrained['available_date'] = unconstrained['available_date'].apply(lambda lst: [d.date() for d in lst])
-        unconstrained = unconstrained[['talent_id', 'tal_role', 'hours', 'available_date']]
+        unconstrained = unconstrained[['talent_id', 'constraint_status','tal_role', 'hours', 'available_date']]
         unconstrained.loc[:, 'available_shifts'] = [fetch_all_shifts()] * len(unconstrained)
         unconstrained = unconstrained.drop_duplicates(subset=['talent_id'])
         return unconstrained
@@ -126,8 +128,9 @@ def create_talent_objects(talents: pd.DataFrame, weeklyhours: float = 32) -> lis
             for shift in list(talent.get('available_shifts', [])):
                 shift_span = map_label_to_time(shift)
                 window[date].append(shift_span)
-                talent_object[talent.get('talent_id', [])] = talentAvailability(
+    talent_object[talent.get('talent_id', [])] = talentAvailability(
                     talent_id=talent.get('talent_id'),
+                    constraint=talent.get('constraint_status'),
                     role=talent.get('tal_role'),
                     shift_name=talent.get('available_shifts'),
                     window=window,
