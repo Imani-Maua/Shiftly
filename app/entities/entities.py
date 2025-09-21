@@ -35,7 +35,7 @@ class talentAvailability:
     talent_id: int
     role: Role
     shift_name: str
-    window: tuple[datetime, datetime] 
+    window: dict[datetime, tuple[datetime, datetime]] 
     weeklyhours: float
 
 @dataclass
