@@ -29,6 +29,13 @@ The system separates responsibilities clearly, applies abstraction for flexibili
 
 ---
 
+## 🛠️ Tech Stack
+
+- **Backend Language**: Python 3.11+
+- **Database**: PostgreSQL
+- **Data Processing**: Pandas
+- **Version Control**: Git
+
 ## Setup
 
 Follow these instructions to get Shiftly running locally.
