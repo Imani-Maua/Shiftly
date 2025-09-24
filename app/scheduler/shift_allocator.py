@@ -36,27 +36,28 @@ class shiftAssignment():
             }
 
         plan: list[assignment] = []
+        dailyValidator = dailyAssignmentValidator()
         constrained = [talent.talent_id for _, talent in self.availability.items() if talent.constraint is not None]
         unconstrained = [talent.talent_id for _,talent in self.availability.items() if talent.constraint is None]
         
         for shift in self.assignable_shifts: 
+            num_assigned = 0
             generate = TalentGenerator(shift, self.talents_to_assign, window)
             candidates = list(generate.find_eligible_talents())
-            for talent_id in candidates:
-                if talent_id in constrained:
-                    ctx = context.contextFinder(talent_id, shift, self.availability, plan)
-                    if all(validator.can_assign_shift(ctx) for validator in validators):
-                        plan.append(assignment(talent_id=talent_id, shift=shift))
-                        check = dailyAssignmentValidator()
-                        mark_assigned = check.mark_assigned(ctx)
-            for talent_id in candidates:
-                if talent_id in unconstrained:
-                    ctx = context.contextFinder(talent_id, shift, self.availability, plan)
-                    if all(validator.can_assign_shift(ctx) for validator in validators):
-                        plan.append(assignment(talent_id=talent_id, shift=shift))
-                        check = dailyAssignmentValidator()
-                        mark_assigned = check.mark_assigned(ctx)
+            sorted_candidates = [tid for tid in candidates if tid in constrained]+\
+                                [tid for tid in candidates if tid in unconstrained]
+            for talent_id in sorted_candidates:
+                if num_assigned >= shift.role_count:
+                    break
 
+                ctx = context.contextFinder(talent_id, shift, self.availability, plan)
+                if shift.shift_name in self.availability[talent_id].shift_name:
+                    if all(validator.can_assign_shift(ctx) for validator in validators):
+                        plan.append(assignment(talent_id=talent_id, shift=shift))
+                        check = dailyAssignmentValidator()
+                        mark_assigned = check.mark_assigned(ctx)
+                        num_assigned += 1
+                
         return plan
 
 
