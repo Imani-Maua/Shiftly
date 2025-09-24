@@ -51,7 +51,6 @@ class filterTalents:
         '''
         constrained = self.repo.loc[(self.repo['constraint_status'].notna())].copy()
         constrained = constrained.groupby(['talent_id','constraint_status', 'available_day']).agg({'available_shifts': lambda x: list(set(x)), 'tal_role': 'first','hours': 'first'}).reset_index()
-        print(constrained.columns)
         constrained.loc[:, 'available_date'] = constrained['available_day'].map(self.week_provider.get_date_map()).dt.date
         return constrained.groupby('talent_id').agg({'talent_id': 'first', 'constraint_status': 'first' ,'tal_role': 'first','hours': 'first', 'available_date': list, 'available_shifts': 'first'}).drop_duplicates(subset=['talent_id'])
 
@@ -128,7 +127,8 @@ def create_talent_objects(talents: pd.DataFrame, weeklyhours: float = 32) -> lis
             for shift in list(talent.get('available_shifts', [])):
                 shift_span = map_label_to_time(shift)
                 window[date].append(shift_span)
-    talent_object[talent.get('talent_id', [])] = talentAvailability(
+
+        talent_object[talent.get('talent_id', [])] = talentAvailability(
                     talent_id=talent.get('talent_id'),
                     constraint=talent.get('constraint_status'),
                     role=talent.get('tal_role'),

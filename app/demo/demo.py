@@ -1,13 +1,13 @@
 import pandas as pd
+from datetime import datetime, timedelta
 from app.database.database import postgreContextManager, postgreCredentials, dataFrameAdapter
 from app.datasource.talent_data import dbTalentRepo, filterTalents, talentAvailabilityDf, create_talent_objects
-from datetime import datetime, timedelta
 from app.entities.entities import weekRange
 from app.datasource.shift_data import dbShiftRepo, weekBuilder,defineShiftRequirements, create_shift_specification
 from app.utils.utils import fetch_staffing_req
 from pprint import pprint
-from app.scheduler.shift_allocator import shiftAllocator
-from app.scheduler.rules import talentByRole, talentAvailableWindow, TalentGenerator, dailyAssignmentTracker, talentAvailableShift
+from app.scheduler.generators import talentByRole
+from app.scheduler.shift_allocator import shiftAssignment
 
 
 class DataRetriever():
@@ -49,7 +49,7 @@ class talentDataManager():
         all_tal = talentAvailabilityDf(filterer)
         all_talents = all_tal.combine_talents()
         my_talents = create_talent_objects(all_talents)
-        return my_talents  
+        return my_talents
     
 class shiftDataManager():
     def __init__(self, shift_df, week_range):
@@ -88,14 +88,12 @@ shift_objects = process_shift_df.generate_shift_objects()
 #generating talents by role and availability
 
 talent_group = talentByRole.group_talents(talent_objects)
-talent_windows = talentAvailableWindow(talent_objects)
-talent_lookup = talent_windows.talent_window_lookup()
-talent_generator = TalentGenerator(shift_objects, talent_group, talent_lookup)
-talent_eligibility = talent_generator.find_eligible_talents()
 
 
 #generating the schedule
-shift_allocator = shiftAllocator(shift_objects, talent_group, talent_lookup, TalentGenerator, dailyAssignmentTracker())
-shifts = shift_allocator.allocate_shifts()
 
-pprint(shifts)
+scheduler = shiftAssignment(talent_objects, shift_objects, talent_group)
+schedule = scheduler.generate_schedule()
+
+pprint(schedule)
+

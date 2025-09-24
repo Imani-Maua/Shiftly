@@ -1,6 +1,5 @@
-from abc import ABC, abstractmethod
 import pandas as pd
-from app.database.database import postgreContextManager,generateDataRepo, postgreCredentials, dbDataRepo
+from app.database.database import generateDataRepo, dbDataRepo
 from app.entities.entities import weekRange, shiftSpecification
 from app.utils.utils import fetch_staffing_req
 from datetime import datetime
@@ -21,6 +20,7 @@ class weekBuilder:
     def __init__(self, week_range: weekRange, req_provider):
         self.week_range = week_range
         self.req_provider = req_provider
+        
     def shiftRequirements(self): #rename the method
         week = self.week_range.get_week()
         week_df = pd.DataFrame({'date': [day.date() for day in week]})
