@@ -1,32 +1,38 @@
 # Shiftly
 
-Shiftly is a **shift scheduling MVP** designed to allocate employees (who Shiftly refers to as talents) to shifts efficiently while respecting availability and constraints. The project separates responsibilities clearly, applies abstraction for flexibility, and uses adapters for data transformation.
+Shiftly is a shift scheduling MVP designed to allocate employees (called **talents**) to shifts efficiently while respecting their availability and constraints.  
+
+The system separates responsibilities clearly, applies abstraction for flexibility, and uses adapters for transforming data between the database and the scheduler.  
 
 > ⚠️ **Note:** This iteration of Shiftly is an MVP therefor not yet in production.
 ---
 
-## Features
+## ✨ Current Features  
 
-- Fetch talent and shift data from a PostgreSQL database.
-- Filter talents based on availability and constraints.
-- Convert raw data into **Pandas DataFrames** for easy manipulation.
-- Apply **eligibility rules** to determine which talents can work which shifts.
-- Allocate shifts using a **rule-based system**.
-- Output scheduled assignments.
+- **Data integration**: Fetch talent and shift data from a PostgreSQL database and transform it into Pandas DataFrames for easy     manipulation.  
+- **Role & availability matching**: Filter talents based on role requirements, availability windows, and allowed shift types.  
+- **Constraint validation**: Apply rule-based validators to ensure compliance with scheduling rules, including:  
+  - Maximum weekly working hours  
+  - No more than one shift per day  
+  - Minimum 11 hours rest between shifts  
+  - Maximum six consecutive workdays  
+- **Quota-aware allocation**: Assign up to the required number of talents per role/shift (e.g., 5 servers for one dinner shift).  
+- **Prioritization**: Consider constrained talents first, then unconstrained, ensuring critical assignments are filled.  
+- **Greedy, rule-based allocation**: For each shift, assign eligible talents until the role’s quota is met, ensuring all validators are satisfied.  
+- **Output**: Return a list of valid shift–talent assignments.  
 
-> ⚠️ **Note:** Future enhancements will include:
+## 🚀 Future Enhancements  
 
-- Maximum hours validation.
-- Consecutive-day checks.
-- Night-to-morning shift restrictions.
-- Employee request handling.
-- Applying AI models to predict staffing needs based on external factors
+- Employee request handling (preferences, time-off requests).  
+- More advanced optimization for fairness and workload balance.  
+- Integration of AI/ML models to predict staffing needs based on external factors (e.g., demand forecasts, seasonality).  
 
 ---
 
 ## Setup
 
 Follow these instructions to get Shiftly running locally.
+
 ### 1. Clone the repository
 
 ```bash
