@@ -19,9 +19,9 @@ The system separates responsibilities clearly, applies abstraction for flexibili
 - **Quota-aware allocation**: Assign up to the required number of talents per role/shift (e.g., 5 servers for one dinner shift).  
 - **Scoring & Prioritization**: 
   - Consider constrained talents first, then unconstrained, ensuring critical assignments are filled.  
-  - Uses ```bash computeScore``` to evaluate suitability of talents for a shift
-- **Fair Distribution**: Uses ```bash roundRobin Picker``` to cycle through equally scored candidates fairly across shifts.
-- **Output**: Produces a list of ```bash assignment``` objects, representing which talent is assigned to which shift. 
+  - Uses ```computeScore``` to evaluate suitability of talents for a shift
+- **Fair Distribution**: Uses ```roundRobin Picker``` to cycle through equally scored candidates fairly across shifts.
+- **Output**: Produces a list of ```assignment``` objects, representing which talent is assigned to which shift. 
 
 ## 🚀 Future Enhancements  
 
