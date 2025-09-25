@@ -17,9 +17,11 @@ The system separates responsibilities clearly, applies abstraction for flexibili
   - Minimum 11 hours rest between shifts  
   - Maximum six consecutive workdays  
 - **Quota-aware allocation**: Assign up to the required number of talents per role/shift (e.g., 5 servers for one dinner shift).  
-- **Prioritization**: Consider constrained talents first, then unconstrained, ensuring critical assignments are filled.  
-- **Greedy, rule-based allocation**: For each shift, assign eligible talents until the role’s quota is met, ensuring all validators are satisfied.  
-- **Output**: Return a list of valid shift–talent assignments.  
+- **Scoring & Prioritization**: 
+  - Consider constrained talents first, then unconstrained, ensuring critical assignments are filled.  
+  - Uses ```bash computeScore``` to evaluate suitability of talents for a shift
+- **Fair Distribution**: Uses ```bash roundRobin Picker``` to cycle through equally scored candidates fairly across shifts.
+- **Output**: Produces a list of ```bash assignment``` objects, representing which talent is assigned to which shift. 
 
 ## 🚀 Future Enhancements  
 
