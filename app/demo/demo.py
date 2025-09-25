@@ -1,13 +1,13 @@
-import pandas as pd
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta
 from app.database.database import postgreContextManager, postgreCredentials, dataFrameAdapter
 from app.datasource.talent_data import dbTalentRepo, filterTalents, talentAvailabilityDf, create_talent_objects
 from app.entities.entities import weekRange
 from app.datasource.shift_data import dbShiftRepo, weekBuilder,defineShiftRequirements, create_shift_specification
 from app.utils.utils import fetch_staffing_req
-from pprint import pprint
 from app.scheduler.generators import talentByRole
 from app.scheduler.shift_allocator import shiftAssignment
+from pprint import pprint
+
 
 
 class DataRetriever():
