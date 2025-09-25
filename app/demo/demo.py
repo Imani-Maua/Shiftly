@@ -1,5 +1,5 @@
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from app.database.database import postgreContextManager, postgreCredentials, dataFrameAdapter
 from app.datasource.talent_data import dbTalentRepo, filterTalents, talentAvailabilityDf, create_talent_objects
 from app.entities.entities import weekRange
@@ -95,5 +95,5 @@ talent_group = talentByRole.group_talents(talent_objects)
 scheduler = shiftAssignment(talent_objects, shift_objects, talent_group)
 schedule = scheduler.generate_schedule()
 
-pprint(schedule)
 
+pprint(schedule)

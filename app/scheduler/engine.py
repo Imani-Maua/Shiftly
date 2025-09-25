@@ -24,6 +24,9 @@ class computeScore:
             assignments (list[assignment]): 
                 List of existing assignments to use when checking workload and streaks.
         """
+        self.shift = shift
+        self.availability = availability
+        self.assignments = assignments
 
     def calculate_score(self, talent_id: int) -> float:
         """Calculate the score for a single talent.
