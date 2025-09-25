@@ -4,7 +4,7 @@ Shiftly is a shift scheduling MVP designed to allocate employees (called **talen
 
 The system separates responsibilities clearly, applies abstraction for flexibility, and uses adapters for transforming data between the database and the scheduler.  
 
-> ⚠️ **Note:** This iteration of Shiftly is an MVP therefor not yet in production.
+> ⚠️ **Note:** This iteration of Shiftly is an MVP therefore not yet in production.
 ---
 
 ## ✨ Current Features  
