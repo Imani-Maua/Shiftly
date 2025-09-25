@@ -20,7 +20,7 @@ The system separates responsibilities clearly, applies abstraction for flexibili
 - **Scoring & Prioritization**: 
   - Consider constrained talents first, then unconstrained, ensuring critical assignments are filled.  
   - Uses ```computeScore``` to evaluate suitability of talents for a shift
-- **Fair Distribution**: Uses ```roundRobin Picker``` to cycle through equally scored candidates fairly across shifts.
+- **Fair Distribution**: Uses ```roundRobinPicker``` to cycle through equally scored candidates fairly across shifts.
 - **Output**: Produces a list of ```assignment``` objects, representing which talent is assigned to which shift. 
 
 ## 🚀 Future Enhancements  
