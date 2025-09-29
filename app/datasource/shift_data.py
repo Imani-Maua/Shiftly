@@ -1,19 +1,7 @@
 import pandas as pd
-from app.database.database import generateDataRepo, dbDataRepo
 from app.entities.entities import weekRange, shiftSpecification
 from app.utils.utils import fetch_staffing_req
 from datetime import datetime
-
-
-class dbShiftRepo(dbDataRepo):
-    def __init__(self, conn):
-        self.conn = conn
-
-    def getData(self):
-        query = "SELECT * FROM shift_data"
-        repo = generateDataRepo(query, self.conn)
-        return repo.retrieveData()
-
 
 
 class weekBuilder:

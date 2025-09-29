@@ -1,32 +1,6 @@
-from abc import ABC, abstractmethod
 import pandas as pd
 from app.entities.entities import talentAvailability, weekRange
 from app.utils.utils import map_label_to_time, fetch_all_shifts
-from app.database.database import dbDataRepo, generateDataRepo
-from datetime import datetime
-
-
-class dbTalentRepo(dbDataRepo):
-    '''
-    Class that defines how to fetch data from a database.
-
-    '''
-    def __init__(self, conn):
-        self.conn = conn
-
-    def getData(self) -> list[dict]:
-        '''
-        Fetches all the talents and their related data from the database
-
-        Args:
-            db.connection: A connection object to the database
-
-        Returns:
-            list: list[psycopg2.extras.RealDictRow]
-        '''
-        query = "SELECT * FROM talent_data"
-        talent_repo = generateDataRepo(query, self.conn)
-        return talent_repo.retrieveData()
 
 
 class filterTalents:
@@ -109,7 +83,7 @@ class talentAvailabilityDf:
 
 
 
-def create_talent_objects(talents: pd.DataFrame, weeklyhours: float = 32) -> list[talentAvailability]:
+def create_talent_objects(talents: pd.DataFrame) -> list[talentAvailability]:
     """
     Returns a list of talent objects from the talent dataframes
 

@@ -18,9 +18,6 @@ class dbCredentials:
     dbname: str
     user: str
     password: str
-    cursor_factory: Type = psycopg2.extras.RealDictCursor
-
-
 
 @dataclass
 class shiftSpecification:
@@ -87,8 +84,13 @@ class weekRange:
         '''
         return self.date_map
 
-
-
+@dataclass
+class placedRequests:
+    request_date: datetime
+    request_status: str
+    request_type: str
+    leave_days: int
+    unpaid_taken: int
 
 
 
