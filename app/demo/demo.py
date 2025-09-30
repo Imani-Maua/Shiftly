@@ -1,12 +1,13 @@
 import asyncio
 from datetime import datetime, timedelta
-from app.database.database import dataFrameAdapter, asyncSQLRepo, get_db
+from app.database.database import dataFrameAdapter, asyncSQLRepo, get_db, db_pool
 from app.entities.entities import weekRange
 from app.datasource.shift_data import weekBuilder,defineShiftRequirements, create_shift_specification
 from app.datasource.talent_data import filterTalents, talentAvailabilityDf, create_talent_objects
 from app.utils.utils import fetch_staffing_req
 from app.scheduler.generators import talentByRole
 from app.scheduler.shift_allocator import shiftAssignment
+from app.auth.onboarding import create_user
 from pprint import pprint
 
 
@@ -24,6 +25,9 @@ class defineShiftWeek():
     
 
 async def main():
+    # ---- initialize the pool ----
+    await db_pool()
+
     # --- open database connection ---
     async for conn in get_db():
 
@@ -53,7 +57,11 @@ async def main():
         scheduler = shiftAssignment(talent_objects, shift_specs, talent_group)
         schedule = scheduler.generate_schedule()
 
-        pprint(schedule)
+
+        # ------ create user -----
+        user = await create_user(firstname="Elaine", lastname="Maua", user_role="Software Engineer", email= "elainemaua@gmail.com", db=conn)
+        
+
     
 if __name__ == '__main__':
     asyncio.run(main())
