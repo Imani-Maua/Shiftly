@@ -7,7 +7,7 @@ from app.entities.entities import dbCredentials
 
 
 load_dotenv()
-
+pool: asyncpg.pool.Pool| None = None 
 
 def postgreCredentials():
     credentials = dbCredentials(
@@ -35,17 +35,23 @@ class asyncSQLRepo(dataRepo):
     async def getData(self):
         return await self.conn.fetch(self.query, *self.params)
 
-async def get_db():
-
-    creds = postgreCredentials()
-    conn = await asyncpg.connect(host=creds.host,
+async def db_pool():
+    global pool
+    if pool is None:
+        creds = postgreCredentials()
+        pool = await asyncpg.create_pool(host=creds.host,
                                  database=creds.dbname,
                                  user=creds.user,
-                                 password=creds.password)
-    try:
+                                 password=creds.password,
+                                 min_size=1,
+                                 max_size=10)
+
+async def get_db():
+
+    if pool is None:
+        raise RuntimeError
+    async with pool.acquire() as conn:
         yield conn
-    finally:
-        await conn.close()
 
 
 class dataFrameAdapter():
