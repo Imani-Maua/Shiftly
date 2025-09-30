@@ -7,8 +7,7 @@ from app.datasource.talent_data import filterTalents, talentAvailabilityDf, crea
 from app.utils.utils import fetch_staffing_req
 from app.scheduler.generators import talentByRole
 from app.scheduler.shift_allocator import shiftAssignment
-from app.auth.onboarding import create_user
-from pprint import pprint
+
 
 
     
@@ -56,11 +55,6 @@ async def main():
         # --- generate schedule ---
         scheduler = shiftAssignment(talent_objects, shift_specs, talent_group)
         schedule = scheduler.generate_schedule()
-
-
-        # ------ create user -----
-        user = await create_user(firstname="Elaine", lastname="Maua", user_role="Software Engineer", email= "elainemaua@gmail.com", db=conn)
-        
 
     
 if __name__ == '__main__':
