@@ -2,7 +2,6 @@ from dataclasses import dataclass, field
 from datetime import datetime
 import enum
 import pandas as pd
-import psycopg2.extras
 from typing import Type
 
 class Role(enum.Enum):

@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from datetime import timedelta, date
 from app.datasource.shift_data import shiftSpecification
 from app.datasource.talent_data import talentAvailability
-from app.entities.entities import assignment, weekRange
+from app.entities.entities import assignment
 
 class abstractValidator(ABC):
     @abstractmethod
@@ -68,7 +68,6 @@ class maxHoursValidator(abstractValidator):
         )
         return total_hours + duration <= availability[talent_id].weeklyhours
 
-
 class consecutiveValidator(abstractValidator):
     """Validator to ensure a talent does not work more than six consecutive days."""
 
@@ -96,7 +95,6 @@ class consecutiveValidator(abstractValidator):
             return True
         
         return check(shift.start_time.date())
-
 
 class restValidator(abstractValidator):
     """Validator to enforce a minimum rest period (11 hours) between shifts."""
@@ -135,7 +133,6 @@ class restValidator(abstractValidator):
             return False
         return True
 
-
 class dailyAssignmentValidator(abstractValidator):
     """Validator to ensure a talent is not assigned to multiple shifts on the same date."""
 
@@ -165,8 +162,12 @@ class dailyAssignmentValidator(abstractValidator):
         talent_id: int = context["talent_id"]
         shift: shiftSpecification = context["shift"]
         return not (talent_id, shift.start_time.date()) in self.assigned
+    
+
 
 validators = [maxHoursValidator(), consecutiveValidator(), restValidator(), dailyAssignmentValidator()]
+
+
 
 
 

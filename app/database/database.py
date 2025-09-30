@@ -49,7 +49,7 @@ async def db_pool():
 async def get_db():
 
     if pool is None:
-        raise RuntimeError
+        await db_pool()
     async with pool.acquire() as conn:
         yield conn
 
