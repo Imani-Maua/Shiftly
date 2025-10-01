@@ -1,13 +1,9 @@
 import hashlib
 import string
 import secrets
-from fastapi import Depends
 from passlib.context import CryptContext
-from datetime import datetime, timedelta, timezone
-from app.auth.models import TokenPayload, UserInvite
 import os
 from dotenv import load_dotenv
-from jose import jwt
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -33,17 +29,12 @@ def verify_password(password: str, hash: str) -> bool:
     prehash = hashlib.sha256(password.encode()).hexdigest()
     return pwd_context.verify(prehash, hash)
 
-def create_access_token(data:TokenPayload, expiry: timedelta | None = None):
-    expiry = datetime.now(timezone.utc) + (expiry or timedelta(minutes=20))
-    data.exp = expiry
-    if not data.sub:
-        raise ValueError("Missing sub field in token data")
-    return jwt.encode(data.model_dump(), SECRET_KEY, algorithm=algorithm)
-
 def generate_temporary_password():
     alphabet = string.ascii_letters + string.digits + string.punctuation
     temporary = ''.join(secrets.choice(alphabet) for _ in range(12))
+    print(temporary)
     return temporary
+
 
 def send_email(to_email:str, subject: str, body: str):
 

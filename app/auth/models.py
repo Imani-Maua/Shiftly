@@ -2,20 +2,12 @@ from pydantic import BaseModel, EmailStr
 from datetime import datetime
 from typing import Optional
 
-class CreateUser(BaseModel):
+class createUser(BaseModel):
     firstname:str
     lastname: str
-    role: str
+    user_role: str
     email: EmailStr
-    password: str
-    is_active: bool = False
 
-
-class TokenPayload(BaseModel):
-    sub: int
-    email: EmailStr
-    role: Optional[str] = None
-    exp: Optional[datetime] = None
 
 class UserInvite(BaseModel):
     sub: int
@@ -61,3 +53,28 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     username: str | None=None
 
+class TokenPayload(BaseModel):
+    sub: str
+    id: int
+    email: EmailStr
+    role: Optional[str] = None
+    type: str
+    exp: Optional[datetime] = None
+
+class AcceptInvite(BaseModel):
+    token: str
+    new_password: str
+
+class InviteToken(BaseModel):
+    id: int
+    user_id: int
+    token: str
+    jti: str
+    type: str
+    expires_at: datetime | None
+    created_at: datetime | None
+    used_at: datetime | None
+
+class sendRequest(BaseModel):
+    user_id: int
+    
