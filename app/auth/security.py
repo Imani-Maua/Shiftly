@@ -61,7 +61,7 @@ async def authenticate_user(db: Annotated[asyncpg.Connection, Depends(get_db)], 
     """
     user: UserInDB = await get_user(db, username)
     if not user or not verify_password(password, user.pwd_hash):
-        None
+        return None
     return user
 
 async def create_access_token(db: Annotated[asyncpg.Connection, Depends(get_db)], data:TokenPayload,type: str, expiry: timedelta | None = None):
@@ -87,8 +87,9 @@ async def create_access_token(db: Annotated[asyncpg.Connection, Depends(get_db)]
         raise ValueError("Missing sub field in token data")
     token = jwt.encode(data.model_dump(), SECRET_KEY, algorithm=algorithm)
     jti = str(uuid.uuid4())
-    token_query = "INSERT INTO invites (user_id, token, jti, type, expires_at, created_at) VALUES($1 ,$2 ,$3 ,$4 ,$5 ,$6)"
-    insert_token = await asyncSQLRepo(conn=db, query=token_query, params=(data.id, token, jti, type, expire, now)).execute()
+    if data.type == "invite":
+        token_query = "INSERT INTO invites (user_id, token, jti, type, expires_at, created_at) VALUES($1 ,$2 ,$3 ,$4 ,$5 ,$6)"
+        insert_token = await asyncSQLRepo(conn=db, query=token_query, params=(data.id, token, jti, type, expire, now)).execute()
     return token
     
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: asyncpg.Connection = Depends(get_db)) -> UserInDB:
@@ -116,6 +117,12 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: as
         if username is None:
             raise credentials_exception
         token_data = TokenData(username=username)
+    except ExpiredSignatureError:
+        return HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token expired",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     except JWTError:
         raise credentials_exception
     user = await get_user(db, username=token_data.username)   

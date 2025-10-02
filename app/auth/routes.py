@@ -4,7 +4,7 @@ from jose import JWTError
 import asyncpg
 from typing import Annotated
 from datetime import timedelta, datetime, timezone
-from app.auth.security import authenticate_user, user_in_db, verify_token, create_access_token, token_in_db, get_user
+from app.auth.security import authenticate_user, user_in_db, verify_token, create_access_token, token_in_db, get_user, required_roles
 from app.auth.models import Token, UserInDB, TokenPayload, UserInvite, AcceptInvite, InviteToken, sendRequest, createUser
 from app.database.database import get_db, asyncSQLRepo
 from app.auth.utils import send_email, hash_password, generate_temporary_password
@@ -14,7 +14,10 @@ app = FastAPI()
 router = APIRouter()
 
 @app.post("/users/create", response_model=UserInvite)
-async def create_user(user: Annotated[createUser, Body()], db: Annotated[asyncpg.Connection, Depends(get_db)]) -> UserInvite:
+async def create_user(user: Annotated[createUser, Body()],
+                       db: Annotated[asyncpg.Connection, Depends(get_db)],
+                       _: str = Depends(required_roles("superuser", "admin"))) -> UserInvite:
+    
     username = f"{user.firstname.strip().lower()}.{user.lastname.strip().lower()}"
     user_exists = await user_in_db(db, username=username)
     if user_exists:
@@ -28,7 +31,9 @@ async def create_user(user: Annotated[createUser, Body()], db: Annotated[asyncpg
 
 INVITE_EXPIRY_HOURS = 24
 @app.post("/users/invite", response_model=dict)
-async def invite_user(user_id:Annotated[sendRequest, Body()], db: Annotated[asyncpg.Connection, Depends(get_db)]):
+async def invite_user(user_id:Annotated[sendRequest, Body()], 
+                      db: Annotated[asyncpg.Connection, Depends(get_db)],
+                      _: str =Depends(required_roles("superuser", "admin"))):
     user: UserInDB = await get_user(db=db, id=user_id.user_id)
     if not user:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User does not exist")
@@ -93,9 +98,9 @@ async def accept_invite(data: Annotated[AcceptInvite, Body ()], db: Annotated[as
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired invite token")
 
 @app.post("/token", response_model=Token)
-async def login_for_access_token(username: str, password: str,
+async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
                                   db: Annotated[asyncpg.Connection, Depends(get_db)]) -> Token:
-    user: UserInDB= await authenticate_user(db, username, password)
+    user: UserInDB= await authenticate_user(db, form_data.username, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
