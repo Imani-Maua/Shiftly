@@ -8,6 +8,32 @@ class createUser(BaseModel):
     user_role: str
     email: EmailStr
 
+class AcceptInvite(BaseModel):
+    token: str
+    new_password: str
+
+class InviteToken(BaseModel):
+    id: int
+    user_id: int
+    token: str
+    jti: str
+    type: str
+    expires_at: datetime | None
+    created_at: datetime | None
+    used_at: datetime | None
+
+class AccessToken(BaseModel):
+    id: int
+    user_id: int
+    token: str
+    jti: str
+    type: str
+    expires_at: datetime | None
+    created_at: datetime | None
+    used_at: datetime | None
+
+class sendRequest(BaseModel):
+    user_id: int
 
 class UserInvite(BaseModel):
     sub: int
@@ -61,20 +87,4 @@ class TokenPayload(BaseModel):
     type: str
     exp: Optional[datetime] = None
 
-class AcceptInvite(BaseModel):
-    token: str
-    new_password: str
 
-class InviteToken(BaseModel):
-    id: int
-    user_id: int
-    token: str
-    jti: str
-    type: str
-    expires_at: datetime | None
-    created_at: datetime | None
-    used_at: datetime | None
-
-class sendRequest(BaseModel):
-    user_id: int
-    

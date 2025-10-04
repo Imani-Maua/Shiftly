@@ -7,7 +7,7 @@ from datetime import timedelta, datetime, timezone
 from app.auth.security import authenticate_user, user_in_db, verify_token, create_access_token, token_in_db, get_user, required_roles
 from app.auth.models import Token, UserInDB, TokenPayload, UserInvite, AcceptInvite, InviteToken, sendRequest, createUser
 from app.database.database import get_db, asyncSQLRepo
-from app.auth.utils import send_email, hash_password, generate_temporary_password
+from app.auth.utils import send_email, hash_password, generate_temporary_password, verify_password
 
 
 app = FastAPI()
@@ -16,7 +16,7 @@ router = APIRouter()
 @app.post("/users/create", response_model=UserInvite)
 async def create_user(user: Annotated[createUser, Body()],
                        db: Annotated[asyncpg.Connection, Depends(get_db)],
-                       _: str = Depends(required_roles("superuser", "admin"))) -> UserInvite:
+                       _: str = Depends(required_roles("super user", "admin"))) -> UserInvite:
     
     username = f"{user.firstname.strip().lower()}.{user.lastname.strip().lower()}"
     user_exists = await user_in_db(db, username=username)
@@ -27,13 +27,13 @@ async def create_user(user: Annotated[createUser, Body()],
     hashed = hash_password(temporary)
     row = await db.fetchrow(insert_query, username, user.firstname, user.lastname, user.email, user.user_role, hashed, False) 
     id = row["id"]
-    return UserInvite(sub=id,username=username, email=user.email, role=user.user_role, password=temporary)
+    return UserInvite(sub=id,username=username, email=user.email, role=user.user_role, password=temporary) #sub is not an integer?
 
 INVITE_EXPIRY_HOURS = 24
 @app.post("/users/invite", response_model=dict)
 async def invite_user(user_id:Annotated[sendRequest, Body()], 
                       db: Annotated[asyncpg.Connection, Depends(get_db)],
-                      _: str =Depends(required_roles("superuser", "admin"))):
+                      _: str =Depends(required_roles("super user", "admin"))):
     user: UserInDB = await get_user(db=db, id=user_id.user_id)
     if not user:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User does not exist")
@@ -43,7 +43,10 @@ async def invite_user(user_id:Annotated[sendRequest, Body()],
         raise ValueError("Incorrect data type")
     access_token_expires = timedelta(hours=INVITE_EXPIRY_HOURS)
     invite_token: InviteToken = await create_access_token(db=db, data=payload, expiry=access_token_expires, type=payload.type)
+    #this is the first point where the token is created
+    #the token is created, hashed, then stored in the database
     invite_link = f"https://shiftly.app/register?token={invite_token}"
+    #and we send the token - unhashed to the user
     name = user.username.split(".")[0].capitalize()
 
     subject = "You've been invited to Shiftly!"
@@ -66,12 +69,12 @@ You’ve been invited to join Shiftly as a {user.user_role}.
 @app.post("/invite/accept", response_model=dict)
 async def accept_invite(data: Annotated[AcceptInvite, Body ()], db: Annotated[asyncpg.Connection, Depends(get_db)]):
     try:
-        verify= verify_token(data.token, "invite")
-        payload = TokenPayload(**verify)
+        verify_type= verify_token(data.token, "invite")
+        payload = TokenPayload(**verify_type)
+       # import pdb; pdb.set_trace()
         token: InviteToken = await token_in_db(db, data.token)
-        print("The expiry date is ", payload.exp)
         if not token:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired token. Ask your admin for a new token")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Token missing.")
         
         if datetime.now(timezone.utc) > payload.exp:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired token. Ask your admin for a new token")
@@ -84,7 +87,7 @@ async def accept_invite(data: Annotated[AcceptInvite, Body ()], db: Annotated[as
         hashed_pass = hash_password(data.new_password)
         user_query = f"UPDATE users SET pwd_hash = $1, is_active = {True} WHERE id= $2"
         activate_user = await asyncSQLRepo(conn=db, query=user_query, params=(hashed_pass, user_id,)).execute()
-        token_query = f"UPDATE invites SET used_at = $1 WHERE token = $2"
+        token_query = f"UPDATE invite_token SET used_at = $1 WHERE token = $2"
         set_used_time = await asyncSQLRepo(conn=db, query=token_query, params=(datetime.now(), data.token,)).execute()
         if user:
             user_token = TokenPayload(sub=user.username, id=user.id, email=user.email, role=user.user_role, type="access")

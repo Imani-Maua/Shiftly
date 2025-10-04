@@ -21,12 +21,12 @@ SMTP_PASS = os.getenv("SMTP_PASS")
 
 
 def hash_password(password: str) -> str:
-    prehash = hashlib.sha256(password.encode()).hexdigest()
+    prehash = hashlib.sha256(password.encode()).digest()
     return pwd_context.hash(prehash)
 
 
 def verify_password(password: str, hash: str) -> bool:
-    prehash = hashlib.sha256(password.encode()).hexdigest()
+    prehash = hashlib.sha256(password.encode()).digest()
     return pwd_context.verify(prehash, hash)
 
 def generate_temporary_password():

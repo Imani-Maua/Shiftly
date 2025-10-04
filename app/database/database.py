@@ -36,6 +36,7 @@ class asyncSQLRepo(dataRepo):
         return await self.conn.fetch(self.query, *self.params)
     
     async def execute(self):
+
         return await self.conn.execute(self.query, *self.params)
 
 async def db_pool():

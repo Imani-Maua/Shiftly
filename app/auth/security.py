@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from typing import Annotated
 from app.auth.models import UserInDB, TokenData, TokenPayload
 from app.database.database import get_db, asyncSQLRepo
-from app.auth.utils import verify_password
+from app.auth.utils import verify_password, hash_password
 from datetime import datetime, timedelta
 
 
@@ -82,14 +82,17 @@ async def create_access_token(db: Annotated[asyncpg.Connection, Depends(get_db)]
     """
     now = datetime.now() #check why I cannot use an aware datetime object here
     expire = now + (expiry if expiry else timedelta(minutes=20))
+    #import pdb; pdb.set_trace()
     data.exp = expire
     if not data.sub:
         raise ValueError("Missing sub field in token data")
     token = jwt.encode(data.model_dump(), SECRET_KEY, algorithm=algorithm)
+    #import pdb; pdb.set_trace()
     jti = str(uuid.uuid4())
+    hash_token = hash_password(token)
     if data.type == "invite":
-        token_query = "INSERT INTO invites (user_id, token, jti, type, expires_at, created_at) VALUES($1 ,$2 ,$3 ,$4 ,$5 ,$6)"
-        insert_token = await asyncSQLRepo(conn=db, query=token_query, params=(data.id, token, jti, type, expire, now)).execute()
+        invite_query = "INSERT INTO invite_token (user_id, token, jti, type, expires_at, created_at) VALUES($1 ,$2 ,$3 ,$4 ,$5 ,$6)"
+        invite_token = await asyncSQLRepo(conn=db, query=invite_query, params=(data.id, hash_token, jti, type, expire, now)).execute()
     return token
     
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: asyncpg.Connection = Depends(get_db)) -> UserInDB:
@@ -185,7 +188,7 @@ async def token_in_db(db: Annotated[asyncpg.Connection, Depends(get_db)], token)
     Returns:
         list | bool: Returns the token record if found, otherwise False.
     """
-    query = "SELECT token from invites where token = $1"
+    query = "SELECT token from invite_token where token = $1"
     repo = await asyncSQLRepo(conn=db, query=query, params=(token,)).getData()
     if repo:
         return repo
