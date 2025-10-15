@@ -1,5 +1,6 @@
 import pandas as pd
 from app.entities.entities import talentAvailability, weekRange
+from app.entities.entities import placedRequests
 from app.utils.utils import map_label_to_time, fetch_all_shifts
 
 
@@ -111,6 +112,37 @@ def create_talent_objects(talents: pd.DataFrame) -> list[talentAvailability]:
                     weeklyhours=talent.get('hours')
                                     )
     return talent_object
+    
+class paidHolidayQuota(): 
+    
+    @staticmethod
+    def can_take_paid_holiday(requests: dict[int,list[placedRequests]]):
+        all_okay = True
+        for tid, talent_requests in requests.items():
+            total_requests = len(talent_requests)
+            if total_requests + talent_requests[0].paid_taken > talent_requests[0].leave_days:
+                for r in talent_requests:
+                    r.request_status = "rejected"
+                    all_okay = False
+            else:
+                for r in talent_requests:
+                    r.request_status = "approved" 
+                    #we need to update the database with the number of leave days taken
+        return all_okay
+    
 
+class approvedHolidays(): 
+    @staticmethod
+    def removeHolidays(talent_available_days: dict[int,talentAvailability], 
+                       requests: dict[int, list[placedRequests]]) -> dict[int, talentAvailability]:
+        
+        paidHolidayQuota().can_take_paid_holiday(requests)
 
+        for tid, avail in talent_available_days.items():
+            
+            approved_requests = [req for req in requests[tid] if req.request_status == "approved"]
+            requested_days = set()
+            for req in approved_requests: requested_days.add(req.request_date)
+            avail.window = {date:spans for date, spans in avail.window.items()if date not in requested_days}
+        return talent_available_days
 
