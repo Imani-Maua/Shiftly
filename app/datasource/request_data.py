@@ -7,7 +7,7 @@ from app.entities.entities import placedRequests
 class requestProcessor():
 
     @staticmethod
-    def groupRequests(repo) -> pd.DataFrame:
+    def change_to_datetime_objects(repo) -> pd.DataFrame:
         repo['request_date'] = pd.to_datetime(repo['request_date'])
         repo['request_date'] = repo['request_date'].apply(lambda d: d.date())
         return repo
@@ -27,4 +27,4 @@ def create_request_objects(requests: pd.DataFrame) -> dict[int, list[date]]:
 
     return request_object
     
-    
+   
