@@ -32,7 +32,6 @@ def verify_password(password: str, hash: str) -> bool:
 def generate_temporary_password():
     alphabet = string.ascii_letters + string.digits + string.punctuation
     temporary = ''.join(secrets.choice(alphabet) for _ in range(12))
-    print(temporary)
     return temporary
 
 
