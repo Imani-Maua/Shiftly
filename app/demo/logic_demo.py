@@ -4,10 +4,10 @@ from app.database.database import dataFrameAdapter, asyncSQLRepo, get_db, db_poo
 from app.entities.entities import weekRange
 from app.datasource.shift_data import weekBuilder,defineShiftRequirements, create_shift_specification
 from app.datasource.talent_data import filterTalents, talentAvailabilityDf, create_talent_objects
+from app.datasource.request_data import requestProcessor, create_request_objects
 from app.utils.utils import fetch_staffing_req
 from app.scheduler.generators import talentByRole
 from app.scheduler.shift_allocator import shiftAssignment
-from app.auth.onboarding import create_user
 from pprint import pprint
 
 
@@ -57,9 +57,14 @@ async def main():
         scheduler = shiftAssignment(talent_objects, shift_specs, talent_group)
         schedule = scheduler.generate_schedule()
 
-        # ------ create user -----
-        user = await create_user(firstname="Elaine", lastname="Maua", user_role="Software Engineer", email= "elainemaua@gmail.com", db=conn)
-        print(user)
+        # ------ requests -----
+        request_repo = asyncSQLRepo(conn, "SELECT * FROM request_data")
+        request_data = await request_repo.getData()
+        request_df = dataFrameAdapter.to_dataframe(request_data)
+        processed_requests = requestProcessor.change_to_datetime_objects(request_df)
+        request_objects = create_request_objects(processed_requests)
+        pprint(request_objects)
+        
 
     
 if __name__ == '__main__':

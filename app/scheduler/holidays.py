@@ -7,11 +7,11 @@ from app.datasource.request_data import placedRequests
 class paidHolidayQuota(): 
     
     @staticmethod
-    def can_take_paid_holiday(self, requests: dict[int,list[placedRequests]]):
+    def can_take_paid_holiday(requests: dict[int,list[placedRequests]]):
         all_okay = True
         for tid, talent_requests in requests.items():
             total_requests = len(talent_requests)
-            if total_requests + talent_requests[0].unpaid_taken > talent_requests[0].leave_days:
+            if total_requests + talent_requests[0].unpaid_taken >= talent_requests[0].leave_days:
                 for r in talent_requests:
                     r.request_status = "pending"
                     all_okay = False

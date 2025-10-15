@@ -2,14 +2,13 @@ from fastapi import FastAPI, APIRouter, Depends, HTTPException, status, Body
 from fastapi.security import OAuth2PasswordRequestForm
 from jose import jwt, JWTError
 import os
-import asyncio
 import asyncpg
 from typing import Annotated
 from datetime import timedelta, datetime, timezone
 from app.auth.security import authenticate_user, user_in_db, verify_token_type, create_jwt, token_in_db, get_user, required_roles, store_token
 from app.auth.models import Token, UserInDB, TokenPayload, UserInvite, AcceptInvite, InviteToken, sendRequest, createUser, UserRole
 from app.database.database import get_db, asyncSQLRepo
-from app.auth.utils import send_email, hash_password, generate_temporary_password, verify_password
+from app.auth.utils import send_email, hash_password, generate_temporary_password
 
 
 app = FastAPI()
@@ -126,6 +125,7 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
     )
     access_token_expires = timedelta(days=ACCESS_EXPIRY_DAYS)
     access_token = create_jwt(data=payload, expiry=access_token_expires)
+    store_access_token = await store_token(payload, access_token, db)
     return Token(access_token=access_token, token_type="bearer", role=user.user_role)
        
 @app.get("/invite/accept", response_model=dict)

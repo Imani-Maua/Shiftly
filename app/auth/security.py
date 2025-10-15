@@ -9,7 +9,7 @@ from typing import Annotated, Union
 from app.auth.models import UserInDB, TokenData, TokenPayload, UserRole
 from app.database.database import get_db, asyncSQLRepo
 from app.auth.utils import verify_password, hash_password
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 
 
