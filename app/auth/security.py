@@ -5,11 +5,12 @@ import os
 import uuid
 from jose import jwt, JWTError, ExpiredSignatureError
 from dotenv import load_dotenv
-from typing import Annotated
-from app.auth.models import UserInDB, TokenData, TokenPayload
+from typing import Annotated, Union
+from app.auth.models import UserInDB, TokenData, TokenPayload, UserRole
 from app.database.database import get_db, asyncSQLRepo
 from app.auth.utils import verify_password, hash_password
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
 
 
 
@@ -64,9 +65,9 @@ async def authenticate_user(db: Annotated[asyncpg.Connection, Depends(get_db)], 
         return None
     return user
 
-async def create_access_token(db: Annotated[asyncpg.Connection, Depends(get_db)], data:TokenPayload,type: str, expiry: timedelta | None = None):
+def create_jwt(data:TokenPayload, expiry: timedelta):
     """
-    Create a JWT access token and store it in the database.
+    Create a JWT access token.
 
     Args:
         db (asyncpg.Connection): The database connection.
@@ -81,19 +82,25 @@ async def create_access_token(db: Annotated[asyncpg.Connection, Depends(get_db)]
         ValueError: If the payload's "sub" field is missing.
     """
     now = datetime.now() #check why I cannot use an aware datetime object here
-    expire = now + (expiry if expiry else timedelta(minutes=20))
-    #import pdb; pdb.set_trace()
+    expire = now + expiry
     data.exp = expire
-    if not data.sub:
-        raise ValueError("Missing sub field in token data")
+    data.jti = str(uuid.uuid4())
     token = jwt.encode(data.model_dump(), SECRET_KEY, algorithm=algorithm)
-    #import pdb; pdb.set_trace()
-    jti = str(uuid.uuid4())
-    hash_token = hash_password(token)
-    if data.type == "invite":
-        invite_query = "INSERT INTO invite_token (user_id, token, jti, type, expires_at, created_at) VALUES($1 ,$2 ,$3 ,$4 ,$5 ,$6)"
-        invite_token = await asyncSQLRepo(conn=db, query=invite_query, params=(data.id, hash_token, jti, type, expire, now)).execute()
     return token
+
+def hash_token(token: str):
+    return hash_password(token)
+
+async def store_token(data: TokenPayload, jwt: str, db: Annotated[asyncpg.Connection, Depends(get_db)]):
+    token = hash_token(jwt)
+    if data.type == "invite":
+        query = "INSERT INTO invite_token (user_id, token, jti, type, expires_at, created_at) VALUES($1 ,$2 ,$3 ,$4 ,$5 ,$6)"
+        invite_token = await asyncSQLRepo(conn=db, query=query, params=(data.id, token, data.jti, "invite", data.exp, datetime.now())).execute()
+        return invite_token
+    elif data.type == "access":
+        query = "INSERT INTO access_token (user_id, token, jti, type, expires_at, created_at) VALUES($1 ,$2 ,$3 ,$4 ,$5 ,$6)"
+        access_token = await asyncSQLRepo(conn=db, query=query, params=(data.id, token, data.jti, "access", data.exp, datetime.now(),)).execute()
+        return access_token
     
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: asyncpg.Connection = Depends(get_db)) -> UserInDB:
     """
@@ -150,7 +157,9 @@ async def get_current_active_user(current_user: Annotated[UserInDB, Depends(get_
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Inactive user")
     return current_user  
 
-async def user_in_db(db: Annotated[asyncpg.Connection, Depends(get_db)], id: int = None, username: str = None)-> bool: 
+async def user_in_db(db: Annotated[asyncpg.Connection, Depends(get_db)], 
+                     id: int = None,
+                     username: str = None)-> bool: 
     """
     Check if a user exists in the database.
 
@@ -188,13 +197,24 @@ async def token_in_db(db: Annotated[asyncpg.Connection, Depends(get_db)], token)
     Returns:
         list | bool: Returns the token record if found, otherwise False.
     """
-    query = "SELECT token from invite_token where token = $1"
-    repo = await asyncSQLRepo(conn=db, query=query, params=(token,)).getData()
-    if repo:
-        return repo
-    return False
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=algorithm)
+        jti = payload.get("jti")
+        if not jti:
+            return False
+        query = "SELECT token from invite_token where jti = $1"
+        repo = await asyncSQLRepo(conn=db, query=query, params=(jti,)).getData()
+        if not repo:
+            return False
+        stored_hash = repo[0]["token"]
+        if verify_password(token, stored_hash):
+            return payload
+        return False
+    except Exception as e:
+        print("Token verification error:", e)
+        return False
 
-def verify_token(token: str, expectedType: str):
+def verify_token_type(token: str, expectedType: str):
     """
     Verify a JWT token and ensure it matches the expected type.
 
@@ -218,7 +238,7 @@ def verify_token(token: str, expectedType: str):
     except Exception as e:
         raise JWTError("Token verification failed")
 
-def required_roles(*roles):
+def required_roles(*roles: Union[str, UserRole]):
     """
     Dependency function to enforce user role-based access.
 
@@ -231,12 +251,15 @@ def required_roles(*roles):
     Raises:
         HTTPException: If the current user's role is not allowed.
     """
-    def check_role(user: Annotated[UserInDB, Depends(get_current_active_user)]):
-        if user.user_role not in roles:
+    valid_roles = {role.value if isinstance(role, UserRole) else role.lower().strip() for role in roles}
+    async def check_role(user: Annotated[UserInDB, Depends(get_current_active_user)]):
+        user_role = user.user_role.lower().strip()
+        if user_role not in valid_roles:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, 
                                 detail="Operation not permitted")
         return user
     return check_role
+
 
 
 
