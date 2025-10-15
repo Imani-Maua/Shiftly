@@ -98,11 +98,29 @@ WHERE tc.type='semester';
 -- ========================================
 INSERT INTO requests (talent_id, req_date, status)
 VALUES
-(1, '2025-09-03', 'approved'),
-(1, '2025-09-06', 'approved'),
-(4, '2025-09-05', 'pending'),
-(7, '2025-09-02', 'rejected'),
-(10, '2025-09-04', 'approved');
+(18, '2025-09-27', 'approved'),
+(18, '2025-09-28', 'approved'),
+(18, '2025-09-29', 'approved'),
+(2, '2025-09-26', 'pending'),
+(21, '2025-09-30', 'pending'),
+(41, '2025-09-26', 'approved'),
+(40, '2025-09-28', 'rejected'),
+(49, '2025-10-01', 'approved'),
+(36, '2025-10-01', 'rejected'),
+(32, '2025-09-29', 'pending'),
+(51, '2025-09-29', 'approved'),
+(52, '2025-09-26', 'pending'),
+(9, '2025-09-25', 'pending'),
+(30, '2025-09-29', 'pending'),
+(1, '2025-09-26', 'rejected'),
+(20, '2025-09-25', 'rejected'),
+(25, '2025-09-25', 'pending'),
+(40, '2025-09-29', 'rejected'),
+(32, '2025-09-25', 'approved'),
+(23, '2025-10-01', 'pending'),
+(18, '2025-09-26', 'approved'),
+(14, '2025-10-01', 'pending'),
+(43, '2025-09-26', 'rejected');
 
 -- ========================================
 -- Shift Periods
@@ -129,4 +147,5 @@ INSERT INTO shift_templates (period_id, role, role_count) VALUES
 (4,'leader',2),(4,'server',3),(4,'runner',2),(4,'hostess',2),(4,'bartender',2),
 (5,'leader',2),(5,'server',3),(5,'runner',2),(5,'hostess',2),(5,'bartender',3),
 (6,'leader',1),(6,'server',3);
+
 

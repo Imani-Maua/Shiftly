@@ -37,6 +37,17 @@ CREATE TABLE requests(
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE users(
+    id INTEGER,
+    username VARCHAR(20),
+    user_role VARCHAR(20),
+    email VARCHAR(100),
+    hashed_password VARCHAR(128),
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_login TIMESTAMP
+)
+
 CREATE OR REPLACE FUNCTION update_updated_at() 
 RETURNS TRIGGER AS $$
 BEGIN
@@ -127,3 +138,4 @@ CREATE OR REPLACE VIEW shift_data AS
     st.role_count
 FROM shift_periods sp
 JOIN shift_templates st ON sp.id = st.period_id;
+
