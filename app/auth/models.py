@@ -1,11 +1,18 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
 from typing import Optional
+from enum import Enum
+
+class UserRole(str, Enum):
+    superuser = "superuser"
+    admin = "admin"
+    manager = "manager"
+    user = "user"
 
 class createUser(BaseModel):
     firstname:str
     lastname: str
-    user_role: str
+    user_role: UserRole
     email: EmailStr
 
 class AcceptInvite(BaseModel):
@@ -86,5 +93,6 @@ class TokenPayload(BaseModel):
     role: Optional[str] = None
     type: str
     exp: Optional[datetime] = None
+    jti: Optional[str] = None
 
 
