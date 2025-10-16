@@ -1,6 +1,5 @@
 import pandas as pd
 from app.core.entities.entities import weekRange, shiftSpecification
-from app.infrastructure.utils.utils import fetch_staffing_req
 from datetime import datetime
 
 
@@ -9,7 +8,7 @@ class weekBuilder:
         self.week_range = week_range
         self.req_provider = req_provider
         
-    def shiftRequirements(self): #rename the method
+    def shiftRequirements(self): 
         week = self.week_range.get_week()
         week_df = pd.DataFrame({'date': [day.date() for day in week]})
         week_df.loc[:, "day"] = [day.strftime("%A") for day in week]
