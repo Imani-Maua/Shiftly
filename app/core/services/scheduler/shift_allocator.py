@@ -1,8 +1,8 @@
 from datetime import datetime
 from app.core.entities.entities import shiftSpecification, talentAvailability, assignment
-from app.core.services.generators import TalentGenerator, talentByRole
-from app.core.services.validators import validators, context
-from app.core.services.engine import computeScore, roundRobinPicker
+from app.core.services.scheduler.generators import TalentGenerator, talentByRole
+from app.core.services.scheduler.validators import validators, context
+from app.core.services.scheduler.scheduler_scoring import computeScore, roundRobinPicker
 
 
 class shiftAssignment():
