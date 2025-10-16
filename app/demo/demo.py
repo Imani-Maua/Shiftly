@@ -53,17 +53,19 @@ async def main():
         shifts = defineShiftRequirements.shiftRequirements(weekly_req, shift_df)
         shift_specs = create_shift_specification(shifts)
 
-        # --- generate schedule ---
-        scheduler = shiftAssignment(talent_objects, shift_specs, talent_group)
-        schedule = scheduler.generate_schedule()
-
         # ------ requests -----
         request_repo = asyncSQLRepo(conn, "SELECT * FROM request_data")
         request_data = await request_repo.getData()
         request_df = dataFrameAdapter.to_dataframe(request_data)
         processed_requests = requestProcessor.change_to_datetime_objects(request_df)
         request_objects = create_request_objects(processed_requests)
-        pprint(request_objects)
+        pprint(talent_objects)
+
+        # --- generate schedule ---
+        scheduler = shiftAssignment(talent_objects, shift_specs, talent_group)
+        schedule = scheduler.generate_schedule()
+
+        
         
 
     

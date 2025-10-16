@@ -1,6 +1,6 @@
 import pandas as pd
-from app.entities.entities import weekRange, shiftSpecification
-from app.utils.utils import fetch_staffing_req
+from app.core.entities.entities import weekRange, shiftSpecification
+from app.infrastructure.utils.utils import fetch_staffing_req
 from datetime import datetime
 
 

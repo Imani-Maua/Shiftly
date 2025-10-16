@@ -1,12 +1,14 @@
 from datetime import datetime
-from app.entities.entities import shiftSpecification, talentAvailability, assignment
-from app.scheduler.generators import TalentGenerator, talentByRole
-from app.scheduler.validators import validators, context
-from app.scheduler.engine import computeScore, roundRobinPicker
+from app.core.entities.entities import shiftSpecification, talentAvailability, assignment
+from app.core.services.scheduler.generators import TalentGenerator, talentByRole
+from app.core.services.scheduler.validators import validators, context
+from app.core.services.scheduler.scheduler_scoring import computeScore, roundRobinPicker
 
 
 class shiftAssignment():
-    def __init__(self, availability: dict[int, talentAvailability], assignable_shifts: list[shiftSpecification], talents_to_assign: dict[str, list[talentByRole]]):
+    def __init__(self, availability: dict[int, talentAvailability], 
+                 assignable_shifts: list[shiftSpecification], 
+                 talents_to_assign: dict[str, list[talentByRole]]):
         """Allocator responsible for generating a schedule of assignments.
 
         Args:
@@ -69,16 +71,12 @@ class shiftAssignment():
                             for v in validators:
                                 if hasattr(v, "mark_assigned"):
                                     v.mark_assigned(ctx)
-                            num_assigned += 1
-                
+                            num_assigned += 1   
         return plan
 
 
-class unAssignedShiftTracker():
 
-    @staticmethod
-    def get_unassigned_shifts(schedule: list[assignment], shifts: list[shiftSpecification]):
-        return [shift for shift in shifts if shift not in [a.shift for a in schedule]]
+
 
 
 

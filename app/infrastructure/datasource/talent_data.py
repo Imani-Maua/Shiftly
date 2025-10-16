@@ -1,6 +1,9 @@
 import pandas as pd
-from app.entities.entities import talentAvailability, weekRange
-from app.utils.utils import map_label_to_time, fetch_all_shifts
+import asyncpg
+from app.infrastructure.database.database import asyncSQLRepo
+from app.core.entities.entities import talentAvailability, weekRange
+from app.core.entities.entities import placedRequests
+from app.infrastructure.utils.utils import map_label_to_time, fetch_all_shifts
 
 
 class filterTalents:
@@ -50,7 +53,6 @@ class filterTalents:
         unconstrained = unconstrained.drop_duplicates(subset=['talent_id'])
         return unconstrained
 
-
 class talentAvailabilityDf:
     '''
     Class that concatenates the manipulated talent data into a single pd.DataFrame.
@@ -78,10 +80,6 @@ class talentAvailabilityDf:
 
         '''
         return pd.concat([self.constrained, self.unconstrained], ignore_index=True)
-
-
-
-
 
 def create_talent_objects(talents: pd.DataFrame) -> list[talentAvailability]:
     """
@@ -113,4 +111,41 @@ def create_talent_objects(talents: pd.DataFrame) -> list[talentAvailability]:
     return talent_object
 
 
+class paidHolidayQuota(): 
+    
+    @staticmethod
+    async def can_take_paid_holiday(db:asyncpg.Connection, requests: dict[int,list[placedRequests]]):
+        all_okay = True
+        for tid, talent_requests in requests.items():
+            total_requests = len(talent_requests)
+            if total_requests + talent_requests[0].paid_taken > talent_requests[0].leave_days:
+                for r in talent_requests:
+                    r.request_status = "rejected"
+                    all_okay = False
+            else:
+                for r in talent_requests:
+                    r.request_status = "approved" 
+                new_paid_taken = total_requests + talent_requests[0].paid_taken
+                new_paid_taken_query = '''UPDATE requests 
+                                            SET paid_taken = $1
+                                                WHERE talent_id = $2'''
+                execute_query = await asyncSQLRepo(conn=db, query=new_paid_taken_query, params=(new_paid_taken, tid,)).execute()
+
+        return all_okay
+    
+
+class approvedHolidays(): 
+    @staticmethod
+    async def removeHolidays(db: asyncpg.Connection, talent_available_days: dict[int,talentAvailability], 
+                       requests: dict[int, list[placedRequests]]) -> dict[int, talentAvailability]:
+        
+        await paidHolidayQuota().can_take_paid_holiday(db, requests)
+
+        for tid, avail in talent_available_days.items():
+            
+            approved_requests = [req for req in requests[tid] if req.request_status == "approved"]
+            requested_days = set()
+            for req in approved_requests: requested_days.add(req.request_date)
+            avail.window = {date:spans for date, spans in avail.window.items()if date not in requested_days}
+        return talent_available_days
 

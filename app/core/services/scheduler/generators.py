@@ -1,5 +1,5 @@
 from collections import defaultdict
-from app.entities.entities import talentAvailability, shiftSpecification
+from app.core.entities.entities import talentAvailability, shiftSpecification
 from datetime import date
 
 

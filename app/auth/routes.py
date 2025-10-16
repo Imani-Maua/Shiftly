@@ -11,14 +11,14 @@ from app.database.database import get_db, asyncSQLRepo
 from app.auth.utils import send_email, hash_password, generate_temporary_password
 
 
-app = FastAPI()
-router = APIRouter()
+
+auth_router = APIRouter()
 
 SECRET_KEY = os.getenv("KEY")
 algorithm = "HS256"
 
 
-@app.post("/users/create", response_model=UserInvite)
+@auth_router.post("/create", response_model=UserInvite)
 async def create_user(user: Annotated[createUser, Body()],
                        db: Annotated[asyncpg.Connection, Depends(get_db)],
                         _: str = Depends(required_roles(UserRole.superuser, UserRole.admin))) -> UserInvite:
@@ -36,7 +36,7 @@ async def create_user(user: Annotated[createUser, Body()],
 
 
 INVITE_EXPIRY_HOURS = 24
-@app.post("/users/invite", response_model=dict)
+@auth_router.post("/send_invite", response_model=dict)
 async def invite_user(user_id:Annotated[sendRequest, Body()], 
                       db: Annotated[asyncpg.Connection, Depends(get_db)],
                       _: str = Depends(required_roles(UserRole.superuser, UserRole.admin))):
@@ -71,7 +71,7 @@ You’ve been invited to join Shiftly as a {user.user_role}.
     
     return {"message": f"Invite sent to {user.email}"}
 
-@app.post("/invite/accept", response_model=dict)
+@auth_router.post("/accept_invite", response_model=dict)
 async def accept_invite(data: Annotated[AcceptInvite, Body ()], 
                         db: Annotated[asyncpg.Connection, Depends(get_db)]):
     try:
@@ -101,7 +101,7 @@ async def accept_invite(data: Annotated[AcceptInvite, Body ()],
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired invite token")
 
 ACCESS_EXPIRY_DAYS = 4
-@app.post("/token", response_model=Token)
+@auth_router.post("/login_token", response_model=Token)
 async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
                                   db: Annotated[asyncpg.Connection, Depends(get_db)]) -> Token:
     user: UserInDB= await authenticate_user(db, form_data.username, form_data.password)
@@ -128,7 +128,7 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
     store_access_token = await store_token(payload, access_token, db)
     return Token(access_token=access_token, token_type="bearer", role=user.user_role)
        
-@app.get("/invite/accept", response_model=dict)
+@auth_router.get("/accept_invite", response_model=dict)
 async def get_invite(token:str, db: Annotated[asyncpg.Connection, Depends(get_db)]):
     try:
         payload = verify_token_type(token, "invite")

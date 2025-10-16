@@ -1,7 +1,7 @@
 import pandas as pd
 from collections import defaultdict
 from datetime import date
-from app.entities.entities import placedRequests
+from app.core.entities.entities import placedRequests
 
 
 class requestProcessor():
@@ -23,7 +23,7 @@ def create_request_objects(requests: pd.DataFrame) -> dict[int, list[date]]:
             request_status=request.get('status', []),
             request_type=request.get('holiday_type', []),
             leave_days=request.get('leave_days', []),
-            unpaid_taken=request.get('unpaid_taken', [])))
+            paid_taken=request.get('paid_taken', [])))
 
     return request_object
     

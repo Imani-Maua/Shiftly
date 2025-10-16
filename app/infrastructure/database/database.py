@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import os
 import pandas as pd
 from abc import ABC, abstractmethod
-from app.entities.entities import dbCredentials
+from app.core.entities.entities import dbCredentials
 
 
 load_dotenv()

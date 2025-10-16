@@ -89,7 +89,7 @@ class placedRequests:
     request_status: str
     request_type: str
     leave_days: int
-    unpaid_taken: int
+    paid_taken: int
 
 
 

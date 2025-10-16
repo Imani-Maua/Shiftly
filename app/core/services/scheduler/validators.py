@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from datetime import timedelta, date
-from app.datasource.shift_data import shiftSpecification
-from app.datasource.talent_data import talentAvailability
-from app.entities.entities import assignment
+from app.infrastructure.datasource.shift_data import shiftSpecification
+from app.infrastructure.datasource.talent_data import talentAvailability
+from app.core.entities.entities import assignment, placedRequests
 
 class abstractValidator(ABC):
     @abstractmethod
