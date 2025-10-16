@@ -1,15 +1,10 @@
 from fastapi import FastAPI
-from database import engine, Base
-from models import *
+from app.auth.routes import auth_router
+from app.core.services.routes import service_router
 
-app = FastAPI()  #create an instance of the FastAPI application
-
-Base.metadata.create_all(bind=engine)
-
-@app.get("/")
-
-def read_root():
-    return {"message": "Scheduler API is running"}
+app = FastAPI(title="Shiftly", version="1.0")
+app.include_router(auth_router, prefix="/users")
+app.include_router(service_router, prefix="/schedule")
 
 
 

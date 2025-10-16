@@ -7,7 +7,7 @@ from typing import Annotated
 from datetime import timedelta, datetime, timezone
 from app.auth.security import authenticate_user, user_in_db, verify_token_type, create_jwt, token_in_db, get_user, required_roles, store_token
 from app.auth.models import Token, UserInDB, TokenPayload, UserInvite, AcceptInvite, InviteToken, sendRequest, createUser, UserRole
-from app.database.database import get_db, asyncSQLRepo
+from app.infrastructure.database.database import get_db, asyncSQLRepo
 from app.auth.utils import send_email, hash_password, generate_temporary_password
 
 
