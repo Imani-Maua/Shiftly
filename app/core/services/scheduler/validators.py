@@ -21,7 +21,7 @@ class abstractValidator(ABC):
 class context():
     
     @staticmethod
-    def contextFinder(talent_id: int, shift: shiftSpecification, availability: dict[int, talentAvailability], assignments: list[assignment]):
+    def contextFinder(talent_id: int, shift: dict[int,shiftSpecification], availability: dict[int, talentAvailability], assignments: list[assignment]):
         """Creates a standardized context dictionary for validators.
 
         Args:
@@ -160,7 +160,7 @@ class dailyAssignmentValidator(abstractValidator):
             bool: True if the talent has not been assigned yet, False if already assigned.
         """
         talent_id: int = context["talent_id"]
-        shift: shiftSpecification = context["shift"]
+        shift:  shiftSpecification = context["shift"]
         return not (talent_id, shift.start_time.date()) in self.assigned
     
 

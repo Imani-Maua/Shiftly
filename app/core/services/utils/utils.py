@@ -28,7 +28,6 @@ def fetch_staffing_req():
     json_path = base_path/"config"/"staffing.json"
     with open(json_path) as p:
         staffing = json.load(p)['staffing']
-        print(staffing)
         return staffing
 
 def get_week_range(start_date: inputDate):
