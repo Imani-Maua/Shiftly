@@ -1,5 +1,5 @@
 from datetime import datetime
-from app.core.entities.entities import shiftSpecification, talentAvailability, assignment
+from app.core.entities.entities import shiftSpecification, talentAvailability, assignment, underStaffedShifts
 from app.core.services.scheduler.generators import TalentGenerator, talentByRole
 from app.core.services.scheduler.validators import validators, context
 from app.core.services.scheduler.scheduler_scoring import computeScore, roundRobinPicker
@@ -7,7 +7,7 @@ from app.core.services.scheduler.scheduler_scoring import computeScore, roundRob
 
 class shiftAssignment():
     def __init__(self, availability: dict[int, talentAvailability], 
-                 assignable_shifts: list[shiftSpecification], 
+                 assignable_shifts: dict[int,shiftSpecification], 
                  talents_to_assign: dict[str, list[talentByRole]]):
         """Allocator responsible for generating a schedule of assignments.
 
@@ -50,7 +50,7 @@ class shiftAssignment():
         constrained = [talent.talent_id for _, talent in self.availability.items() if talent.constraint is not None]
         unconstrained = [talent.talent_id for _,talent in self.availability.items() if talent.constraint is None]
         
-        for shift in self.assignable_shifts: 
+        for shift_id, shift in self.assignable_shifts.items(): 
             generate = TalentGenerator(shift, self.talents_to_assign, window)
             candidates = list(generate.find_eligible_talents())
             sorted_candidates = [tid for tid in candidates if tid in constrained]+\
@@ -67,7 +67,7 @@ class shiftAssignment():
                 if shift.shift_name in self.availability[talent_id].shift_name:
                     if all(validator.can_assign_shift(ctx) for validator in validators):
                         if best_fit:
-                            plan.append(assignment(talent_id=talent_id, shift=shift))
+                            plan.append(assignment(talent_id=talent_id, shift_id=shift_id, shift=shift))
                             for v in validators:
                                 if hasattr(v, "mark_assigned"):
                                     v.mark_assigned(ctx)
@@ -75,6 +75,46 @@ class shiftAssignment():
         return plan
 
 
+class UnderstaffedShifts:
+
+
+    def __init__(self, conn, assignable_shifts: dict[int,shiftSpecification], assigned_shifts: list[assignment]):
+        self.conn = conn
+        self.assignable_shifts = assignable_shifts
+        self.assigned_shifts = assigned_shifts
+    
+    def get_all(self) -> list:
+
+        understaffed = []
+
+        assigned_count: dict[int, int] = {}
+        for assignment in self.assigned_shifts:
+            assigned_count[assignment.shift_id] = assigned_count.get(assignment.shift_id, 0) + 1
+
+        for shift_id, shift in self.assignable_shifts.items():
+            required = shift.role_count
+            assigned = assigned_count.get(shift_id, 0)
+            if assigned < required:
+                understaffed.append(underStaffedShifts(
+                    shift_id=shift_id,
+                    shift_name= shift.shift_name,
+                    shift_start= shift.start_time,
+                    shift_end=shift.end_time,
+                    role_name= shift.role_name,
+                    required=required,
+                    assigned=assigned,
+                    missing=required-assigned
+                ))
+        return understaffed
+    
+    def unassigned_only(self):
+        assigned_count: dict[int, int] = {}
+        for assignment in self.assigned_shifts:
+            assigned_count[assignment.shift_id] = assigned_count.get(assignment.shift_id, 0) + 1
+        
+        unassigned = [shift for shift_id, shift in self.assignable_shifts.items() 
+                      if shift_id not in assigned_count]
+        return unassigned
 
 
 

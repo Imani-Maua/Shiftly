@@ -81,7 +81,7 @@ class talentAvailabilityDf:
         '''
         return pd.concat([self.constrained, self.unconstrained], ignore_index=True)
 
-def create_talent_objects(talents: pd.DataFrame) -> list[talentAvailability]:
+def create_talent_objects(talents: pd.DataFrame) -> dict[int, talentAvailability]:
     """
     Returns a list of talent objects from the talent dataframes
 
