@@ -35,3 +35,12 @@ class ShiftUpdate(BaseModel):
     role: str  | None = None
     role_count: int  | None = None
 
+class ShiftOut(BaseModel):
+    id: int
+    shift_name: str
+    role_name: str
+    start_time: time
+    end_time: time
+    low_staffing: int
+    high_staffing: int
+
