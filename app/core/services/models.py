@@ -41,6 +41,5 @@ class ShiftOut(BaseModel):
     role_name: str
     start_time: time
     end_time: time
-    low_staffing: int
-    high_staffing: int
+    staffing: str
 
