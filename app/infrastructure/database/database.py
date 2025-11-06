@@ -1,3 +1,5 @@
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine
 import asyncpg
 from dotenv import load_dotenv
 import os
@@ -63,3 +65,22 @@ class dataFrameAdapter():
     @staticmethod
     def to_dataframe(data: list[asyncpg.Record]) -> pd.DataFrame:
         return pd.DataFrame([dict(record) for record in data])
+    
+
+import os
+from dotenv import load_dotenv
+
+
+load_dotenv()
+
+
+database = os.getenv("DATABASE_URL")
+engine = create_engine(database, echo=True)
+SessionLocal = sessionmaker(autoflush=False, autocommit=False, bind=engine)
+
+def session():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
