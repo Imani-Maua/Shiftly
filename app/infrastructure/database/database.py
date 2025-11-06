@@ -64,15 +64,7 @@ class dataFrameAdapter():
 
     @staticmethod
     def to_dataframe(data: list[asyncpg.Record]) -> pd.DataFrame:
-        return pd.DataFrame([dict(record) for record in data])
-    
-
-import os
-from dotenv import load_dotenv
-
-
-load_dotenv()
-
+        return pd.DataFrame([dict(record) for record in data])   
 
 database = os.getenv("DATABASE_URL")
 engine = create_engine(database, echo=True)
