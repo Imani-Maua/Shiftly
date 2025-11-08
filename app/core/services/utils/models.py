@@ -48,7 +48,6 @@ class ConstraintDay(Base):
     day: Mapped[Optional[str]] = mapped_column(String(50))
     shifts: Mapped[Optional[str]] = mapped_column(String(50))
 
-
     constraint: Mapped[Optional["TalentConstraint"]] = relationship(back_populates="constraint_days")
 
 
@@ -88,17 +87,21 @@ class ScheduledShift(Base):
     start_time: Mapped[Optional[time]]
     end_time: Mapped[Optional[time]]
     shift_hours: Mapped[Optional[float]] = mapped_column(Numeric(3, 1))
+    schedule_id: Mapped[Optional[int]] = mapped_column(ForeignKey("schedules.id"))
 
-    # Relationships
+   
     talent: Mapped[Optional["Talent"]] = relationship(back_populates="scheduled_shifts")
+    schedule: Mapped[Optional["Schedule"]] = relationship(back_populates="scheduled_shifts")
 
 class Schedule(Base):
     __tablename__ = "schedules"
-    
+
     id: Mapped[int] = mapped_column(primary_key=True,index=True)
     week_start: Mapped[date] = mapped_column(date)
     week_end: Mapped[date] = mapped_column(date)
     status: Mapped[str] = mapped_column(str, default="draft")
+
+    scheduled_shifts: Mapped[List["ScheduledShift"]] = relationship(back_populates="schedule")
 
 class Request(Base):
     __tablename__ = "requests"
