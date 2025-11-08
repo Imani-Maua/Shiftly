@@ -57,7 +57,6 @@ class ShiftPeriod(Base):
     __tablename__ = "shift_periods"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    staffing: Mapped[Optional[str]] = mapped_column(String(50))
     shift_name: Mapped[Optional[str]] = mapped_column(String(50))
     start_time: Mapped[Optional[time]]
     end_time: Mapped[Optional[time]]
@@ -71,6 +70,7 @@ class ShiftTemplate(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     period_id: Mapped[Optional[int]] = mapped_column(ForeignKey("shift_periods.id"))
+    staffing: Mapped[Optional[str]] = mapped_column(String(50))
     role: Mapped[Optional[str]] = mapped_column(String(50))
     role_count: Mapped[Optional[int]] = mapped_column(Integer)
 
