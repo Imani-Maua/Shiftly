@@ -1,7 +1,8 @@
+from fastapi import HTTPException, status
 from typing import Generic, TypeVar, Type, Optional, Annotated
-from fastapi import Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
 
 
 
@@ -23,22 +24,38 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     
     def create(self, db:Session, obj_in: CreateSchemaType) -> Optional[ModelType]:
         obj = self.model(**obj_in.model_dump())
-        db.add(obj)
-        db.commit(obj)
-        db.refresh(obj)
-        return obj
+        try:
+            db.add(obj)
+            db.commit()
+            db.refresh(obj)
+            return obj
+        except SQLAlchemyError as e:
+            db.rollback()
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Database error while creating model:{str(e)}")
+            
     
     def update(self, db:Session, db_obj: ModelType, obj_in:UpdateSchemaType) -> Optional[ModelType]:
-        for field, value in obj_in.model_dump(exclude_unset=True).items():
-            setattr(db_obj, field, value)
-        db.commit()
-        db.refresh(db_obj)
-        return db_obj
+        try:
+            for field, value in obj_in.model_dump(exclude_unset=True).items():
+                setattr(db_obj, field, value)
+            db.commit()
+            db.refresh(db_obj)
+            return db_obj
+        except SQLAlchemyError as e:
+            db.rollback()
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Database error while updating model:{str(e)}")
+            
+
     
     def delete(self, db:Session, id: int):
-        obj = db.query(self.model).get(id)
-        if obj:
-            db.delete(obj)
-            db.commit()
-        return obj
+        try:
+            obj = db.query(self.model).get(id)
+            if obj:
+                db.delete(obj)
+                db.commit()
+            return obj
+        except SQLAlchemyError as e:
+            db.rollback()
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Database error while deleting model:{str(e)}")
+            
         
