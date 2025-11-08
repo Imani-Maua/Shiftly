@@ -21,6 +21,7 @@ from app.core.services.utils.crud import CRUDBase
 schedule = APIRouter()
 holidays = APIRouter()
 talents = APIRouter()
+shift_period = APIRouter()
 
 
 @schedule.post("/generate")
@@ -53,7 +54,7 @@ async def generate_schedule(db: Annotated[asyncpg.Connection, Depends(get_db)],
         raise HTTPException(status_code=500, detail="Unexpected error: " + str(e))
     
 
-@schedule.post("/shift_period/create")
+@shift_period.post("/create")
 async def create_shift_period(db: Annotated[Session, Depends(session)],
                               data: Annotated[ShiftPeriodCreate, Body()],
                               _: str = Depends(required_roles(UserRole.admin, UserRole.manager))):
@@ -69,7 +70,7 @@ async def create_shift_period(db: Annotated[Session, Depends(session)],
     )
     
 
-@schedule.patch("/shift_period/{period_id}")
+@shift_period.patch("/update/{period_id}")
 async def update_shift_period(db: Annotated[Session,  Depends(session)],
                               period_id: int,
                               update_data: Annotated[ShiftPeriodUpdate, Body()],
@@ -87,6 +88,16 @@ async def update_shift_period(db: Annotated[Session,  Depends(session)],
             end_time=updated_shift.end_time
         )
 
+@shift_period.delete("/delete/{period_id}", status_code=204)
+async def delete_shift_period(db: Annotated[Session, Depends(session)],
+                              period_id: int,
+                              _: str= Depends(required_roles(UserRole.admin, UserRole.manager))):
+    crud_shift = CRUDBase[ShiftPeriod, ShiftPeriodCreate, ShiftPeriodUpdate](ShiftPeriod)
+    shift_period = db.query(ShiftPeriod).get(period_id)
+    if not shift_period:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Shift period not found")
+    
+    return crud_shift.delete(db, period_id)
 
 @talents.post("/create_talent")
 async def create_talent():
