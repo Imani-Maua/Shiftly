@@ -1,21 +1,26 @@
 from fastapi import APIRouter, Body, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
 from datetime import date, timedelta, datetime
 from typing import Annotated
 import asyncpg
-from app.core.services.models import inputDate, ShiftUpdate, ShiftCreate, ShiftOut
-from app.core.entities.entities import shiftSpecification, assignment
+from app.core.services.utils.models import ShiftPeriod
+from app.core.services.utils.pydantic import inputDate, ShiftOut, ShiftPeriodCreate, ShiftPeriodUpdate
 from app.core.services.utils.utils import get_week_range
 from app.core.services.scheduler.data_services import process_request_data, process_shift_data, process_talent_data, approvedHolidayRequests
 from app.core.services.scheduler.generators import talentByRole
 from app.core.services.scheduler.shift_allocator import shiftAssignment, UnderstaffedShifts
-from app.infrastructure.database.database import get_db
-from app.core.entities.entities import weekRange
+from app.infrastructure.database.database import get_db, session
 from app.auth.security import required_roles
 from app.auth.models import UserRole
+from app.core.services.utils.crud import CRUDBase
+
+
 
 
 schedule = APIRouter()
 holidays = APIRouter()
+talents = APIRouter()
 
 
 @schedule.post("/generate")
@@ -47,34 +52,29 @@ async def generate_schedule(db: Annotated[asyncpg.Connection, Depends(get_db)],
     except Exception as e:
         raise HTTPException(status_code=500, detail="Unexpected error: " + str(e))
     
-@schedule.post("/create_shift")
-async def create_shift_period(db: Annotated[asyncpg.Connection, Depends(get_db)],
-                              data: Annotated[ShiftCreate, Body()],
+
+@schedule.post("/create_shift_period")
+async def create_shift_period(db: Annotated[Session, Depends(session)],
+                              data: Annotated[ShiftPeriodCreate, Body()],
                               _: str = Depends(required_roles(UserRole.admin, UserRole.manager))):
-    period_query = """
-            INSERT INTO shift_periods(staffing, shift_name, start_time, end_time)
-            VALUES($1, $2, $3, $4) RETURNING id"""
-    period_id_record = await db.fetchrow(period_query, 
-                                         data.staffing,
-                                         data.shift_name.value if hasattr(data.shift_name, "value") else data.shift_name,
-                                         data.start_time,
-                                         data.end_time)
-    period_id = period_id_record["id"]
-    template_query = """
-            INSERT INTO shift_templates(period_id, role, role_count)
-            VALUES($1, $2, $3)"""
-    shift_id_record = await db.fetchrow(template_query, period_id, data.role, data.role_count)
-    shift_id = shift_id_record["id"]
+    period_generator = CRUDBase[ShiftPeriod, ShiftPeriodCreate, ShiftPeriodCreate](ShiftPeriod)
+    
+
+    shift_period = period_generator.create(db,data)
     return ShiftOut(
-        id=shift_id,
-        shift_name=data.shift_name.value if hasattr(data.shift_name, "value") else data.shift_name,
-        role_name= data.role,
-        start_time=data.start_time,
-        end_time=data.end_time,
-        staffing=data.staffing
+        id=shift_period.id,
+        shift_name=shift_period.shift_name,
+        start_time=shift_period.start_time,
+        end_time=shift_period.end_time,
     )
     
 
+
+
+
+@talents.post("/create_talent")
+async def create_talent():
+    pass
 
 
  #submit a request
