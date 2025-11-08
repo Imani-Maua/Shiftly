@@ -92,6 +92,13 @@ class ScheduledShift(Base):
     # Relationships
     talent: Mapped[Optional["Talent"]] = relationship(back_populates="scheduled_shifts")
 
+class Schedule(Base):
+    __tablename__ = "schedules"
+    
+    id: Mapped[int] = mapped_column(primary_key=True,index=True)
+    week_start: Mapped[date] = mapped_column(date)
+    week_end: Mapped[date] = mapped_column(date)
+    status: Mapped[str] = mapped_column(str, default="draft")
 
 class Request(Base):
     __tablename__ = "requests"
