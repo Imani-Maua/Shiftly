@@ -53,7 +53,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             if obj:
                 db.delete(obj)
                 db.commit()
-            return obj
+            return {"detail": "Shift period deleted successfully"}
         except SQLAlchemyError as e:
             db.rollback()
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Database error while deleting model:{str(e)}")
