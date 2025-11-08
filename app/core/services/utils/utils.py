@@ -1,6 +1,6 @@
 from datetime import datetime, time, timedelta
 from app.core.entities.entities import weekRange
-from app.core.services.models import inputDate
+from app.core.services.utils.pydantic import inputDate
 from pathlib import Path
 import json
 
