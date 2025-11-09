@@ -31,7 +31,7 @@ class TalentConstraint(Base):
     __tablename__ = "talent_constraints"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    talent_id: Mapped[Optional[int]] = mapped_column(ForeignKey("talents.id"))
+    talent_id: Mapped[Optional[int]] = mapped_column(ForeignKey("talents.id", ondelete="CASCADE"))
     type: Mapped[Optional[str]] = mapped_column(String(50))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
@@ -44,7 +44,7 @@ class ConstraintDay(Base):
     __tablename__ = "constraint_days"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    constraint_id: Mapped[Optional[int]] = mapped_column(ForeignKey("talent_constraints.id"))
+    constraint_id: Mapped[Optional[int]] = mapped_column(ForeignKey("talent_constraints.id", ondelete="CASCADE"))
     day: Mapped[Optional[str]] = mapped_column(String(50))
     shifts: Mapped[Optional[str]] = mapped_column(String(50))
 
@@ -68,7 +68,7 @@ class ShiftTemplate(Base):
     __tablename__ = "shift_templates"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    period_id: Mapped[Optional[int]] = mapped_column(ForeignKey("shift_periods.id"))
+    period_id: Mapped[Optional[int]] = mapped_column(ForeignKey("shift_periods.id", ondelete="CASCADE"))
     staffing: Mapped[Optional[str]] = mapped_column(String(50))
     role: Mapped[Optional[str]] = mapped_column(String(50))
     role_count: Mapped[Optional[int]] = mapped_column(Integer)
@@ -82,12 +82,12 @@ class ScheduledShift(Base):
     __tablename__ = "scheduled_shifts"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    talent_id: Mapped[Optional[int]] = mapped_column(ForeignKey("talents.id"))
+    talent_id: Mapped[Optional[int]] = mapped_column(ForeignKey("talents.id", ondelete="CASCADE"))
     date_of: Mapped[Optional[date]]
     start_time: Mapped[Optional[time]]
     end_time: Mapped[Optional[time]]
     shift_hours: Mapped[Optional[float]] = mapped_column(Numeric(3, 1))
-    schedule_id: Mapped[Optional[int]] = mapped_column(ForeignKey("schedules.id"))
+    schedule_id: Mapped[Optional[int]] = mapped_column(ForeignKey("schedules.id", ondelete="CASCADE"))
 
    
     talent: Mapped[Optional["Talent"]] = relationship(back_populates="scheduled_shifts")
@@ -107,11 +107,11 @@ class Request(Base):
     __tablename__ = "requests"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    talent_id: Mapped[Optional[int]] = mapped_column(ForeignKey("talents.id"))
+    talent_id: Mapped[Optional[int]] = mapped_column(ForeignKey("talents.id", ondelete="CASCADE"))
     req_date: Mapped[date]
     status: Mapped[Optional[str]] = mapped_column(String(50))
-    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(default=datetime)
+    updated_at: Mapped[datetime] = mapped_column(default=datetime)
     holiday_type: Mapped[str] = mapped_column(String(10), default="paid")
     leave_days: Mapped[int] = mapped_column(Integer, default=21)
     paid_taken: Mapped[int] = mapped_column(Integer, default=0)
