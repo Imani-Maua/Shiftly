@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Body, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import SQLAlchemyError
 from datetime import date, timedelta, datetime
 from typing import Annotated
 import asyncpg
-from app.core.services.utils.models import ShiftPeriod
+from app.core.services.utils.models import ShiftPeriod, Schedule
 from app.core.services.utils.pydantic import inputDate, ShiftOut, ShiftPeriodCreate, ShiftPeriodUpdate
 from app.core.services.utils.utils import get_week_range
 from app.core.services.scheduler.data_services import process_request_data, process_shift_data, process_talent_data, approvedHolidayRequests
@@ -22,6 +22,7 @@ schedule = APIRouter()
 holidays = APIRouter()
 talents = APIRouter()
 shift_period = APIRouter()
+shift_template = APIRouter()
 
 
 @schedule.post("/generate")
@@ -52,7 +53,17 @@ async def generate_schedule(db: Annotated[asyncpg.Connection, Depends(get_db)],
         raise HTTPException(status_code=500, detail="Data missing key: " + str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail="Unexpected error: " + str(e))
-    
+
+@schedule.get("/view/{week_start}")
+async def view_schedule(db: Annotated[Session, Depends(session)],
+                        week_start: date,
+                        _: str = Depends(required_roles(UserRole.admin, UserRole.manager))):
+    schedule = db.query(Schedule).options(joinedload(Schedule.scheduled_shifts)).filter(Schedule.week_start == week_start).first()
+    if not schedule:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Schedule does not exist")
+    return schedule
+    #set this such that you can only give a date that is on Sunday/Monday depending on when week_start is
+
 
 @shift_period.post("/create")
 async def create_shift_period(db: Annotated[Session, Depends(session)],
@@ -102,6 +113,9 @@ async def delete_shift_period(db: Annotated[Session, Depends(session)],
 @talents.post("/create_talent")
 async def create_talent():
     pass
+
+
+
 
 
  #submit a request
