@@ -2,13 +2,13 @@ from fastapi import Depends, Body, HTTPException, status, APIRouter
 from sqlalchemy.orm import Session
 from typing import Annotated
 from app.infrastructure.database.database import session
-from app.core.pydantic.pydantic import ShiftPeriodCreate, ShiftOut, ShiftPeriodUpdate
-from app.core.utils.models import ShiftPeriod
+from app.core.schema.pydantic import ShiftPeriodCreate, ShiftOut, ShiftPeriodUpdate
+from app.core.models.models import ShiftPeriod
 from app.auth.auth_logic.security import required_roles
 from app.auth.pydantic.auth_pydantic import UserRole
 from app.core.utils.crud import CRUDBase
 
-shift_period = APIRouter(prefix="shift_period", tags=['shift_period'])
+shift_period = APIRouter(tags=["Shift Period"])
 
 
 @shift_period.post("/create")

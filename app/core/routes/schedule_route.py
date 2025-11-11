@@ -6,13 +6,13 @@ import asyncpg
 from app.infrastructure.database.database import get_db, session
 from app.auth.auth_logic.security import required_roles
 from app.auth.pydantic.auth_pydantic import UserRole
-from app.core.pydantic.pydantic import inputDate
-from app.core.utils.models import Schedule
+from app.core.schema.pydantic import inputDate
+from app.core.models.models import Schedule
 from app.core.services.schedule_service import ScheduleService
 
 
 
-schedule = APIRouter()
+schedule = APIRouter(tags=["Schedule"])
 
 
 @schedule.post("/generate")

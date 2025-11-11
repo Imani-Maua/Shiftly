@@ -8,7 +8,7 @@ from app.infrastructure.database.database import get_db
 from app.auth.services.auth_services import AuthService
 
 
-auth_router = APIRouter()
+auth_router = APIRouter(tags=["Users"])
 
 @auth_router.post("/create", response_model=UserInvite)
 async def create_user(user: Annotated[createUser, Body()],

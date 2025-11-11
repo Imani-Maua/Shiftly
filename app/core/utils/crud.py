@@ -31,7 +31,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         
        return query.all()
     
-    def create(self, db:Union[Session, asyncpg.Connection], obj_in: CreateSchemaType) -> Optional[ModelType]:
+    def create(self, db:Union[Session, asyncpg.Connection], obj_in: Optional[CreateSchemaType]) -> Optional[ModelType]:
         obj = self.model(**obj_in.model_dump())
         try:
             db.add(obj)

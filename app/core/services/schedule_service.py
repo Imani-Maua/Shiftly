@@ -6,11 +6,11 @@ from datetime import date
 import asyncpg
 from app.infrastructure.database.database import get_db, session
 from app.core.utils.utils import get_week_range
-from app.core.pydantic.pydantic import inputDate
+from app.core.schema.pydantic import inputDate
 from app.core.scheduler_logic.data_services import process_request_data, process_shift_data, process_talent_data, approvedHolidayRequests
 from app.core.scheduler_logic.generators import talentByRole
 from app.core.scheduler_logic.shift_allocator import shiftAssignment, UnderstaffedShifts
-from app.core.utils.models import Schedule
+from app.core.models.models import Schedule
 from app.core.utils.exceptions import ValidationError, DatabaseError, NotFoundError, AppBaseException
 
 
