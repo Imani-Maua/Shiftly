@@ -1,22 +1,21 @@
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 import asyncpg
-from dotenv import load_dotenv
-import os
+from app.config.config import Settings
 import pandas as pd
 from abc import ABC, abstractmethod
 from app.core.entities.entities import dbCredentials
 
 
-load_dotenv()
+settings = Settings()
 pool: asyncpg.pool.Pool| None = None 
 
 def postgreCredentials():
     credentials = dbCredentials(
-        host=os.getenv("DB_HOST"),
-        dbname=os.getenv("DB_NAME"),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD")
+        host=settings.DB_HOST,
+        dbname=settings.DB_NAME,
+        user=settings.DB_USER,
+        password=settings.DB_PASSWORD
     )
 
     return credentials
@@ -66,7 +65,7 @@ class dataFrameAdapter():
     def to_dataframe(data: list[asyncpg.Record]) -> pd.DataFrame:
         return pd.DataFrame([dict(record) for record in data])   
 
-database = os.getenv("DATABASE_URL")
+database = settings.DATABASE_URL
 engine = create_engine(database, echo=True)
 SessionLocal = sessionmaker(autoflush=False, autocommit=False, bind=engine)
 
