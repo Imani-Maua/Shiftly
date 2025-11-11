@@ -4,8 +4,8 @@ from datetime import date
 from typing import Annotated
 import asyncpg
 from app.infrastructure.database.database import get_db, session
-from app.auth.security import required_roles
-from app.auth.models import UserRole
+from app.auth.auth_logic.security import required_roles
+from app.auth.pydantic.auth_pydantic import UserRole
 from app.core.pydantic.pydantic import inputDate
 from app.core.utils.models import Schedule
 from app.core.services.schedule_service import ScheduleService
