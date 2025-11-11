@@ -1,6 +1,5 @@
 from fastapi import HTTPException, status
 from typing import Union
-import asyncpg
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from app.core.pydantic.talent_pydantic import TalentCreate, TalentUpdate, TalentOut
