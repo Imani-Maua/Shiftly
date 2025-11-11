@@ -4,8 +4,8 @@ from typing import Annotated
 from app.infrastructure.database.database import session
 from app.core.pydantic.pydantic import ShiftPeriodCreate, ShiftOut, ShiftPeriodUpdate
 from app.core.utils.models import ShiftPeriod
-from app.auth.security import required_roles
-from app.auth.models import UserRole
+from app.auth.auth_logic.security import required_roles
+from app.auth.pydantic.auth_pydantic import UserRole
 from app.core.utils.crud import CRUDBase
 
 shift_period = APIRouter(prefix="shift_period", tags=['shift_period'])
