@@ -5,8 +5,8 @@ from app.core.utils.models import Talent
 from app.core.services.talent_service import TalentService
 from app.core.pydantic.talent_pydantic import TalentCreate, TalentUpdate, TalentOut, TalentRead
 from app.infrastructure.database.database import session
-from app.auth.security import required_roles
-from app.auth.models import UserRole
+from app.auth.auth_logic.security import required_roles
+from app.auth.pydantic.auth_pydantic import UserRole
 
 
 talents = APIRouter()
