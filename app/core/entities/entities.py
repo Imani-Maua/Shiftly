@@ -38,6 +38,7 @@ class talentAvailability:
 @dataclass
 class assignment:
     talent_id : int
+    shift_id: int
     shift : shiftSpecification
 
 @dataclass
@@ -91,6 +92,16 @@ class placedRequests:
     leave_days: int
     paid_taken: int
 
+@dataclass
+class underStaffedShifts:
+    shift_id: int
+    shift_name: str
+    shift_start: datetime
+    shift_end: datetime
+    role_name: str
+    required: int
+    assigned: int
+    missing: int
 
 
 
