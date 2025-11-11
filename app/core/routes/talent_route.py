@@ -1,15 +1,15 @@
-from fastapi import APIRouter, Depends, Body, Query, HTTPException, status
+from fastapi import APIRouter, Depends, Body
 from sqlalchemy.orm import Session
 from typing import Annotated, Union, List
-from app.core.utils.models import Talent
+from app.core.models.models import Talent
 from app.core.services.talent_service import TalentService
-from app.core.pydantic.talent_pydantic import TalentCreate, TalentUpdate, TalentOut, TalentRead
+from app.core.schema.talent_schema import TalentCreate, TalentUpdate, TalentOut, TalentRead
 from app.infrastructure.database.database import session
 from app.auth.auth_logic.security import required_roles
 from app.auth.pydantic.auth_pydantic import UserRole
 
 
-talents = APIRouter()
+talents = APIRouter(tags=["Talents"])
 
 @talents.post("/create_talent")
 async def create_talent(db:Annotated[Session, Depends(session)],
@@ -18,11 +18,11 @@ async def create_talent(db:Annotated[Session, Depends(session)],
     service = TalentService()
 
     if isinstance(data, TalentCreate):
-        return await service.create_talent(db, data)
+        return service.create_talent(db, data)
     
     created_talents = []
     for talent in data:
-        created_talent = await service.create_talent(db, talent)
+        created_talent = service.create_talent(db, talent)
         created_talents.append(created_talent)
     
     return created_talents
@@ -32,7 +32,7 @@ async def update_talent(db: Annotated[Session, Depends(session)],
                         talent_id: int,
                         data: Annotated[TalentUpdate, Body()],
                         _: str=Depends(required_roles(UserRole.admin, UserRole.manager))):
-    talent = await TalentService().update_talent(db, talent_id, data)
+    talent = TalentService().update_talent(db, talent_id, data)
     return talent
 
 @talents.get("/retrieve_talents")
