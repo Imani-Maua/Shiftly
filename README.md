@@ -1,10 +1,10 @@
-# Shiftly
+# SlotMeIn
 
-Shiftly is a shift scheduling MVP designed to allocate employees (called **talents**) to shifts efficiently while respecting their availability and constraints.  
+SlotMeIn is a shift scheduling MVP designed to allocate employees (called **talents**) to shifts efficiently while respecting their availability and constraints.  
 
 The system separates responsibilities clearly, applies abstraction for flexibility, and uses adapters for transforming data between the database and the scheduler.  
 
-> ⚠️ **Note:** This iteration of Shiftly is an MVP therefore not yet in production.
+> ⚠️ **Note:** This iteration of SlotMeIn is an MVP therefore not yet in production.
 ---
 
 ## ✨ Current Features  
@@ -40,7 +40,7 @@ The system separates responsibilities clearly, applies abstraction for flexibili
 
 ## Setup
 
-Follow these instructions to get Shiftly running locally.
+Follow these instructions to get SlotMeIn running locally.
 
 ### 1. Clone the repository
 
@@ -77,7 +77,7 @@ DB_PASSWORD=your_database_password
 ### 5. Set up the database
 
 - Connect to your postgreSQL database
-- Run the schema file to create tables and views needed for shiftly
+- Run the schema file to create tables and views needed for slotmein
 
 ```bash
 psql -U DB_USER -d DB_NAME -f schema.sql
