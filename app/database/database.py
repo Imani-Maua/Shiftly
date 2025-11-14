@@ -1,10 +1,8 @@
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
 import asyncpg
 from app.config.config import Settings
 import pandas as pd
 from abc import ABC, abstractmethod
-from app.core.entities.entities import dbCredentials
+from app.core.schedule.services.entities import dbCredentials
 
 
 settings = Settings()
@@ -65,13 +63,3 @@ class dataFrameAdapter():
     def to_dataframe(data: list[asyncpg.Record]) -> pd.DataFrame:
         return pd.DataFrame([dict(record) for record in data])   
 
-database = settings.DATABASE_URL
-engine = create_engine(database, echo=True)
-SessionLocal = sessionmaker(autoflush=False, autocommit=False, bind=engine)
-
-def session():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
