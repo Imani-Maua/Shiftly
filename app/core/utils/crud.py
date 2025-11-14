@@ -31,6 +31,18 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         
        return query.all()
     
+    def batch_create(self, db: Union[Session, asyncpg.Connection], objs_in: Optional[CreateSchemaType]):
+        objs = [self.model(**obj.model_dump()) for obj in objs_in]
+        try:
+            db.add_all(objs)
+            db.commit()
+            for obj in objs:
+                db.refresh(obj)
+            return objs
+        except AlchemyDatabaseError:
+            db.rollback()
+            raise DatabaseError("A database error has occurred during generation. Please try again")
+
     def create(self, db:Union[Session, asyncpg.Connection], obj_in: Optional[CreateSchemaType]) -> Optional[ModelType]:
         obj = self.model(**obj_in.model_dump())
         try:
@@ -40,7 +52,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             return obj
         except AlchemyDatabaseError as e:
             db.rollback()
-            raise DatabaseError("A database error has occurred during schedule generation. Please try again")
+            raise DatabaseError("A database error has occurred during generation. Please try again")
     
     def update(self, db:Union[Session, asyncpg.Connection], db_obj: ModelType, obj_in:UpdateSchemaType) -> Optional[ModelType]:
         try:
@@ -53,7 +65,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             return db_obj
         except AlchemyDatabaseError as e:
             db.rollback()
-            raise DatabaseError("A database error has occurred during schedule generation. Please try again")
+            raise DatabaseError("A database error has occurred during generation. Please try again")
             
 
     
@@ -66,5 +78,5 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             return obj
         except AlchemyDatabaseError as e:
             db.rollback()
-            raise RuntimeError("A database error has occurred during schedule generation. Please try again")
+            raise RuntimeError("A database error has occurred during generation. Please try again")
         
