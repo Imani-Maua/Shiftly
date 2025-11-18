@@ -6,7 +6,7 @@ from app.core.utils.crud import CRUDBase
 from app.database.models import ConstraintRule, TalentConstraint
 from app.core.constraints.constraint_rules.schema import  ConstraintRuleCreate, ConstraintRuleUpdate, ConstraintRuleIn, ConstraintRuleOut, ConstraintType
 from app.core.constraints.constraint_rules.utils import generate_rule_combinations
-from app.core.constraints.constraint_rules.services.validators import validators, Context
+from app.core.constraints.constraint_rules.services.validators import validators, Context, AbstractValidator
 
 
 class RulesConfiguration():
@@ -52,9 +52,9 @@ class ConstraintRuleService(CRUDBase[ConstraintRule, ConstraintRuleIn, Constrain
         
         ctx = Context.contextFinder(
             db=db, data=data, rules_config=rules_config, constraint=constraint)
-        print(f"THIS IS CONTEXT: {ctx}")
 
         for validator in validators:
+            validator: AbstractValidator
             validator.pass_validation(ctx)
         
         rules_to_process: list[ConstraintRuleCreate] = generate_rule_combinations(data)
@@ -64,7 +64,6 @@ class ConstraintRuleService(CRUDBase[ConstraintRule, ConstraintRuleIn, Constrain
 
         created_rules: list[ConstraintRule] = self.batch_create(db=db, objs_in=rules_to_process)
         
-        print(created_rules[0])
         
         return [ConstraintRuleOut.model_validate(rule) for rule in created_rules]
 
