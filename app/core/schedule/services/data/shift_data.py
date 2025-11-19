@@ -7,7 +7,9 @@ class weekBuilder:
     def __init__(self, week_range: weekRange, req_provider):
         self.week_range = week_range
         self.req_provider = req_provider
-        
+
+      #this is the part of the code that will be affected drastically when we include other factors as factors that affect staffing
+      # needs since based on the logic now, we only consider the day of the week  
     def shiftRequirements(self): 
         week = self.week_range.week
         week_df = pd.DataFrame({'date': [day.date() for day in week]})

@@ -7,8 +7,7 @@ class ShiftName(Enum):
     PM = "PM"
     Lounge = "lounge"
 
-
-   
+ 
 class ShiftPeriodIn(BaseModel):
     shift_name: ShiftName
     start_time: time
