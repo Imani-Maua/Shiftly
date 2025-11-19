@@ -2,29 +2,25 @@ from fastapi import Depends, Body, HTTPException, status, APIRouter
 from sqlalchemy.orm import Session
 from typing import Annotated
 from app.database.session import session
-from app.core.shift_period.schema import ShiftPeriodCreate, ShiftOut, ShiftPeriodUpdate
+from app.core.shift_period.schema import ShiftPeriodIn, ShiftOut, ShiftPeriodUpdate
 from app.database.models import ShiftPeriod
 from app.auth.services.security import required_roles
 from app.auth.schema import UserRole
 from app.core.utils.crud import CRUDBase
+from app.core.shift_period.services.services import ShiftPeriodService
 
 shift_period = APIRouter(tags=["Shift Period"])
 
 
+# change the UserRole.enum values
 @shift_period.post("/create")
 async def create_shift_period(db: Annotated[Session, Depends(session)],
-                              data: Annotated[ShiftPeriodCreate, Body()],
-                              _: str = Depends(required_roles(UserRole.admin, UserRole.manager))):
-    period_generator = CRUDBase[ShiftPeriod, ShiftPeriodCreate, ShiftPeriodCreate](ShiftPeriod)
-    
+                              data: Annotated[ShiftPeriodIn, Body()],
+                              _: str = Depends(required_roles(UserRole.superuser))):
 
-    shift_period = period_generator.create(db,data)
-    return ShiftOut(
-        id=shift_period.id,
-        shift_name=shift_period.shift_name,
-        start_time=shift_period.start_time,
-        end_time=shift_period.end_time,
-    )
+
+    shift_period = ShiftPeriodService().create_shift_period(db=db, data=data)
+    return shift_period
     
 @shift_period.patch("/update/{period_id}")
 async def update_shift_period(db: Annotated[Session,  Depends(session)],
@@ -32,7 +28,7 @@ async def update_shift_period(db: Annotated[Session,  Depends(session)],
                               update_data: Annotated[ShiftPeriodUpdate, Body()],
                               _: str= Depends(required_roles(UserRole.admin, UserRole.manager))
                                 ):
-    crud_shift = CRUDBase[ShiftPeriod, ShiftPeriodCreate, ShiftPeriodUpdate](ShiftPeriod)
+    crud_shift = CRUDBase[ShiftPeriod, ShiftPeriodIn, ShiftPeriodUpdate](ShiftPeriod)
     shift_period = db.query(ShiftPeriod).get(period_id)
     if not shift_period:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Shift period not found")
@@ -48,7 +44,7 @@ async def update_shift_period(db: Annotated[Session,  Depends(session)],
 async def delete_shift_period(db: Annotated[Session, Depends(session)],
                               period_id: int,
                               _: str= Depends(required_roles(UserRole.admin, UserRole.manager))):
-    crud_shift = CRUDBase[ShiftPeriod, ShiftPeriodCreate, ShiftPeriodUpdate](ShiftPeriod)
+    crud_shift = CRUDBase[ShiftPeriod, ShiftPeriodIn, ShiftPeriodUpdate](ShiftPeriod)
     shift_period = db.query(ShiftPeriod).get(period_id)
     if not shift_period:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Shift period not found")

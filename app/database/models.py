@@ -18,8 +18,8 @@ class Talent(Base):
     contract_type: Mapped[str] = mapped_column(String(50), default="full-time")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     hours: Mapped[int] = mapped_column(Integer)
-    start_date: Mapped[Optional[date]]
-    end_date: Mapped[Optional[date]]
+    start_date: Mapped[Optional[date]] = mapped_column(Date)
+    end_date: Mapped[Optional[date]] = mapped_column(Date)
 
     requests: Mapped[List["Request"]] = relationship(back_populates="talent")
     constraints: Mapped[List["TalentConstraint"]] = relationship(back_populates="talent")
@@ -61,6 +61,7 @@ class ShiftPeriod(Base):
     end_time: Mapped[Optional[time]] = mapped_column(Time)
 
 
+
     templates: Mapped[List["ShiftTemplate"]] = relationship(back_populates="period")
 
 
@@ -69,9 +70,10 @@ class ShiftTemplate(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     period_id: Mapped[Optional[int]] = mapped_column(ForeignKey("shift_periods.id", ondelete="CASCADE"))
-    staffing: Mapped[Optional[str]] = mapped_column(String(50))
+    shift_start: Mapped[Optional[time]] = mapped_column(Time)
+    shift_end: Mapped[Optional[time]] = mapped_column(Time)
     role: Mapped[Optional[str]] = mapped_column(String(50))
-    role_count: Mapped[Optional[int]] = mapped_column(Integer)
+    
 
 
     period: Mapped[Optional["ShiftPeriod"]] = relationship(back_populates="templates")

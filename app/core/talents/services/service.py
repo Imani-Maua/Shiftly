@@ -1,53 +1,47 @@
 from fastapi import HTTPException, status
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
-from app.core.talents.schema import TalentCreate, TalentUpdate
+from datetime import datetime
+from typing import Union, List
+from app.core.talents.schema import TalentIn, TalentUpdate, TalentOut
 from app.core.utils.crud import CRUDBase
 from app.database.models import Talent
-from datetime import datetime
+from app.core.talents.services.validator import input_validators,update_validators, AbstractValidator
+from app.core.talents.utils import set_contract_hours, context_finder
 
 
-class TalentService(CRUDBase[Talent, TalentCreate, TalentUpdate]):
+class TalentService(CRUDBase[Talent, TalentIn, TalentUpdate]):
 
     def __init__(self):
         super().__init__(Talent)
 
-    def create_talent(self, db: Session,  data:TalentCreate) -> Talent:
-        if data.contract_type not in ("full-time", "part-time", "student"):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid contract type")
-        contract_hours = {
-            "full-time": 40,
-            "part-time": 30,
-            "student": 24
-        }
-
-        data.hours = contract_hours[data.contract_type]
+    def create_talent(self, db: Session,  data:TalentIn) -> Talent:
+        talent = db.query(Talent).filter(Talent.email == data.email).first()
+        context = context_finder(db=db, data=data, talent=talent)
+        for validator in input_validators:
+            validator: AbstractValidator
+            validator.validate_talent(context)
+        contract_hours = set_contract_hours(data.contract_type)
         
-        existing = db.query(Talent).filter(Talent.email == data.email).first() #change this to uuid since emails are not unique
-        if existing:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Talent with this email already exists")
-        talent = self.create(db, data)
-        return talent
+        created_talents: Talent = self.create(db=db, obj_in=data)
+        created_talents.hours = contract_hours
+
+        db.add(created_talents)
+        db.commit()
+        db.refresh(created_talents)
+
+        return TalentOut.model_validate(created_talents)
+
     
     def update_talent(self, db: Session, talent_id:int, data: TalentUpdate):
         talent = db.query(Talent).filter(Talent.id == talent_id).first()
-        if not talent:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Talent not found")
-        if data.contract_type and data.contract_type not in ("full-time", "part-time", "student"):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid contract type")
-        contract_hours = {
-            "full-time": 40,
-            "part-time": 30,
-            "student": 24
-        }
-
-        data.hours = contract_hours[data.contract_type]
-
-        if data.is_active == False:
-            data.end_date = datetime.now().date()
-        
+        context = context_finder(db=db, data=data, talent=talent)
+        for validator in update_validators:
+            validator: AbstractValidator
+            validator.validate_talent(context)
         updated_talent = self.update(db, talent, data)
-        return updated_talent
+
+        return TalentOut.model_validate(updated_talent)
     
     def get_all_talents(self, db: Session,
                               name: str | None = None,
