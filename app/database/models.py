@@ -18,8 +18,8 @@ class Talent(Base):
     contract_type: Mapped[str] = mapped_column(String(50), default="full-time")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     hours: Mapped[int] = mapped_column(Integer)
-    start_date: Mapped[Optional[date]]
-    end_date: Mapped[Optional[date]]
+    start_date: Mapped[Optional[date]] = mapped_column(Date)
+    end_date: Mapped[Optional[date]] = mapped_column(Date)
 
     requests: Mapped[List["Request"]] = relationship(back_populates="talent")
     constraints: Mapped[List["TalentConstraint"]] = relationship(back_populates="talent")

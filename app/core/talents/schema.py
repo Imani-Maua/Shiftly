@@ -1,29 +1,47 @@
-from pydantic import BaseModel,EmailStr
+from pydantic import BaseModel,EmailStr, ConfigDict
 from datetime import date
+from enum import Enum
 
 
-class TalentCreate(BaseModel):
+
+class Role(Enum):
+    MANAGER = "manager" 
+    ASSISTANT_MANAGER = "assistant manager"
+    SUPERVISOR = "supervisor"
+    BARTENDER = "bartender"
+    SERVER = "server"
+    RUNNER = "runner"
+    HOSTESS = "hostess"
+    JOB_FORCE = "job force"
+
+
+class ContractType(Enum):
+    FULL_TIME = "full-time"
+    PART_TIME = "part-time"
+    STUDENT = "student"
+
+
+class TalentIn(BaseModel):
     firstname: str
     lastname: str
     email: EmailStr
-    tal_role: str
-    contract_type: str
-    hours: int | None = None
+    tal_role: Role
+    contract_type: ContractType
     start_date: date
 
-#only a superuser should be able to update all these fields. Otherwise, 
-# a manager should only be able to update the contract_type, activity
-#Otherwise the data can be easily corrupted, but this will be handled later
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+
+#only a superuser should be able to update all these fields. 
+
 class TalentUpdate(BaseModel):
     firstname: str | None = None
     lastname: str | None = None
     email: EmailStr | None = None
-    tal_role: str | None = None
-    contract_type: str | None = None
+    tal_role: Role | None = None
+    contract_type: ContractType | None = None
     is_active: bool | None = None
-    hours: int | None = None
-    start_date: date | None = None
-    end_date: date | None = None
+
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
 
 class TalentOut(BaseModel):
     firstname: str
@@ -32,14 +50,11 @@ class TalentOut(BaseModel):
     contract_type: str
     hours: int
     is_active: bool
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
 
 class TalentRead(BaseModel):
     firstname: str
     lastname: str
     tal_role: str
 
-    model_config = {
-        "from_attributes": True
-    }
-    
-    
+    model_config = ConfigDict(from_attributes=True)

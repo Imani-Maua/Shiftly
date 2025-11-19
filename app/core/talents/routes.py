@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, Body
 from sqlalchemy.orm import Session
 from typing import Annotated, Union, List
-from app.core.talents.service import TalentService
-from app.core.talents.schema import TalentCreate, TalentUpdate, TalentRead
+from app.core.talents.services.service import TalentService
+from app.core.talents.schema import TalentIn, TalentUpdate, TalentRead
 from app.database.session import session
 from app.auth.services.security import required_roles
 from app.auth.schema import UserRole
@@ -11,27 +11,20 @@ from app.database.models import Talent
 
 talents = APIRouter(tags=["Talents"])
 
+
+
 @talents.post("/create_talent")
 async def create_talent(db:Annotated[Session, Depends(session)],
-                        data: Annotated[Union[TalentCreate, List[TalentCreate]],Body()],
-                        _:str= Depends(required_roles(UserRole.admin, UserRole.manager))):
-    service = TalentService()
-
-    if isinstance(data, TalentCreate):
-        return service.create_talent(db, data)
-    
-    created_talents = []
-    for talent in data:
-        created_talent = service.create_talent(db, talent)
-        created_talents.append(created_talent)
-    
-    return created_talents
-
+                        data: Annotated[TalentIn,Body()],
+                        _: str=Depends(required_roles(UserRole.admin, UserRole.manager))):
+    talents = TalentService().create_talent(db=db, data=data)
+    return talents
+  
 @talents.put("/update_talent/{talent_id}")
 async def update_talent(db: Annotated[Session, Depends(session)],
                         talent_id: int,
                         data: Annotated[TalentUpdate, Body()],
-                        _: str=Depends(required_roles(UserRole.admin, UserRole.manager))):
+                        _:str= Depends(required_roles(UserRole.admin, UserRole.manager))):
     talent = TalentService().update_talent(db, talent_id, data)
     return talent
 
