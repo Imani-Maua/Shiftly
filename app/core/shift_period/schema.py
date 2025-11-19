@@ -7,6 +7,7 @@ class ShiftName(Enum):
     PM = "PM"
     Lounge = "lounge"
 
+
    
 class ShiftPeriodIn(BaseModel):
     shift_name: ShiftName
@@ -26,6 +27,6 @@ class ShiftPeriodUpdate(BaseModel):
    
 class ShiftOut(BaseModel):
     id: int
-    shift_name: str
-    start_time: time
-    end_time: time
+    shift: ShiftPeriodIn
+
+    

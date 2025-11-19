@@ -55,7 +55,6 @@ class ShiftPeriodTimeFrame(AbstractValidator):
     def expected_timeframe(cls, context: dict) -> dict:
         data: ShiftPeriodIn = context["data"]
         shift_name = data.shift_name
-        print(f"The shift name is {shift_name}")
         return cls.SHIFT_TIMEFRAME.get(shift_name)
     
     @classmethod
@@ -67,7 +66,6 @@ class ShiftPeriodTimeFrame(AbstractValidator):
         end_time = data.end_time
 
         timeframe: dict = cls.expected_timeframe(context)
-        print(f"{timeframe} IS TIMEFRAME")
         if timeframe is None:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, 
                                 detail=f"Unknown shift type: {shift_name}")

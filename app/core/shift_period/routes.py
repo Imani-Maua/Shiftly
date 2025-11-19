@@ -12,10 +12,11 @@ from app.core.shift_period.services.services import ShiftPeriodService
 shift_period = APIRouter(tags=["Shift Period"])
 
 
-# _: str = Depends(required_roles(UserRole.admin, UserRole.manager))
+# change the UserRole.enum values
 @shift_period.post("/create")
 async def create_shift_period(db: Annotated[Session, Depends(session)],
-                              data: Annotated[ShiftPeriodIn, Body()]):
+                              data: Annotated[ShiftPeriodIn, Body()],
+                              _: str = Depends(required_roles(UserRole.superuser))):
 
 
     shift_period = ShiftPeriodService().create_shift_period(db=db, data=data)
