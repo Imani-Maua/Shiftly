@@ -29,5 +29,5 @@ class ShiftPeriodService(CRUDBase[ShiftPeriod, ShiftPeriodIn, ShiftPeriodUpdate]
     def delete_shift_period(self, db: Session, period_id: int):
         shift_period = db.query(ShiftPeriod).filter(ShiftPeriod.id == period_id).first()
         validate_shift_period_delete(shift_period)
-        deleted_shift = self.delete(db=db, id=period_id)
+        self.delete(db=db, id=period_id)
         
