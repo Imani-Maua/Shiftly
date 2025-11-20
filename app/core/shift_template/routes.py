@@ -13,7 +13,7 @@ shift_templates = APIRouter(tags=["Shift Templates"])
 @shift_templates.post("/create")
 def create_template(db: Annotated[Session, Depends(session)],
                       data: Annotated[TemplateIn, Body()],
-                      #_:str= Depends(required_roles(UserRole.admin, UserRole.manager))
+                      _:str= Depends(required_roles(UserRole.admin, UserRole.manager))
                       ):
     shift_template = TemplateService().create_template(db=db, data=data)
     return shift_template
@@ -22,7 +22,7 @@ def create_template(db: Annotated[Session, Depends(session)],
 def update_template(db: Annotated[Session,  Depends(session)],
                               template_id: int,
                               update_data: Annotated[TemplateUpdate, Body()],
-                            # _: str= Depends(required_roles(UserRole.admin, UserRole.manager))
+                             _: str= Depends(required_roles(UserRole.admin, UserRole.manager))
                                 ):
     updated_template = TemplateService().update_template(db=db, data=update_data, template_id=template_id)
     return updated_template
@@ -30,6 +30,6 @@ def update_template(db: Annotated[Session,  Depends(session)],
 @shift_templates.delete("/delete/{template_id}", status_code=204)
 def delete_template(db: Annotated[Session, Depends(session)],
                               template_id: int,
-                            #  _: str= Depends(required_roles(UserRole.admin, UserRole.manager))
+                             _: str= Depends(required_roles(UserRole.admin, UserRole.manager))
                               ):
     TemplateService().delete_template(db=db, template_id=template_id)
