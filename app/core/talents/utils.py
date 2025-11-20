@@ -11,14 +11,6 @@ def set_contract_hours(contract_type: str):
 
     return contract_hours.get(contract_type)
 
-def context_finder(*,db: Session, data: TalentIn, talent: Talent):
-    context = {
-        "db": db,
-        "data": data,
-        "talent": talent
-    }
-
-    return context
 
 
     

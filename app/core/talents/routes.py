@@ -34,7 +34,10 @@ async def get_all_talents(db: Annotated[Session, Depends(session)], name: str | 
                           contract_type: str | None = None,
                           is_active: bool | None = None) -> list[TalentRead]:
 
-    talents: list[Talent] = TalentService().get_all(db, name=name, tal_role=tal_role, contract_type=contract_type, is_active=is_active)
+    talents: list[Talent] = TalentService().get_all(db, name=name, 
+                                                    tal_role=tal_role, 
+                                                    contract_type=contract_type, 
+                                                    is_active=is_active)
     
     return [TalentRead.model_validate(talent) for talent in talents]
 

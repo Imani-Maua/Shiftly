@@ -1,6 +1,6 @@
 from datetime import date, time, datetime
 from typing import List, Optional
-from sqlalchemy import ForeignKey, String, Integer, Boolean, Numeric, Date, Time
+from sqlalchemy import ForeignKey, String, Integer, Boolean, Numeric, Date, Time, DateTime, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -110,13 +110,11 @@ class Request(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     talent_id: Mapped[Optional[int]] = mapped_column(ForeignKey("talents.id", ondelete="CASCADE"))
-    req_date: Mapped[date]
-    status: Mapped[Optional[str]] = mapped_column(String(50))
-    created_at: Mapped[datetime] = mapped_column(default=datetime)
-    updated_at: Mapped[datetime] = mapped_column(default=datetime)
+    req_date: Mapped[date] = mapped_column(Date)
+    status: Mapped[Optional[str]] = mapped_column(String(50), default="pending")
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate= func.now(), nullable=False)
     holiday_type: Mapped[str] = mapped_column(String(10), default="paid")
-    leave_days: Mapped[int] = mapped_column(Integer, default=21)
-    paid_taken: Mapped[int] = mapped_column(Integer, default=0)
 
 
     talent: Mapped[Optional["Talent"]] = relationship(back_populates="requests")

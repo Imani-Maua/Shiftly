@@ -1,24 +1,6 @@
 from pydantic import BaseModel,EmailStr, ConfigDict
 from datetime import date
-from enum import Enum
-
-
-
-class Role(Enum):
-    MANAGER = "manager" 
-    ASSISTANT_MANAGER = "assistant manager"
-    SUPERVISOR = "supervisor"
-    BARTENDER = "bartender"
-    SERVER = "server"
-    RUNNER = "runner"
-    HOSTESS = "hostess"
-    JOB_FORCE = "job force"
-
-
-class ContractType(Enum):
-    FULL_TIME = "full-time"
-    PART_TIME = "part-time"
-    STUDENT = "student"
+from app.core.utils.enums import Role, ContractType
 
 
 class TalentIn(BaseModel):
