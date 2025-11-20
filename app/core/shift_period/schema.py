@@ -1,15 +1,11 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 from datetime import time
-from enum import Enum
+from app.core.utils.enums import Shifts
 
-class ShiftName(Enum):
-    AM  = "AM"
-    PM = "PM"
-    Lounge = "lounge"
 
  
 class ShiftPeriodIn(BaseModel):
-    shift_name: ShiftName
+    shift_name: Shifts
     start_time: time
     end_time: time
 
@@ -17,7 +13,6 @@ class ShiftPeriodIn(BaseModel):
 
 
 class ShiftPeriodUpdate(BaseModel):
-    shift_name: ShiftName  | None = None
     start_time: time  | None = None
     end_time: time  | None = None
 
@@ -25,7 +20,19 @@ class ShiftPeriodUpdate(BaseModel):
 
    
 class ShiftOut(BaseModel):
-    id: int
-    shift: ShiftPeriodIn
+    shift_name: Shifts
+    start_time: time
+    end_time: time
+
+    model_config = ConfigDict(use_enum_values=True, from_attributes=True)
+
+    @field_validator("shift_name", mode="before")
+    @classmethod
+    def normalize_shift_name(cls, value):
+        if isinstance(value, str):
+            return value.lower()
+        return value
+
+
 
     
