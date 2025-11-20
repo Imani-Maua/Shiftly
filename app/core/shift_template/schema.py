@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 from datetime import time
 from app.core.utils.enums import TemplateRole, Shifts
 
@@ -25,8 +25,17 @@ class PeriodOut(BaseModel):
 
     model_config = ConfigDict(from_attributes=True, use_enum_values=True)
 
+    @field_validator("shift_name", mode="before")
+    @classmethod
+
+    def normalize_shift_name(cls, value):
+        if isinstance(value, str):
+            return value.lower()
+        return value
+
 class TemplateOut(BaseModel):
     period: PeriodOut
-    template: TemplateIn
+    shift_start: time 
+    shift_end: time 
 
     model_config = ConfigDict(from_attributes=True, use_enum_values=True)
