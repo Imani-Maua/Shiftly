@@ -21,32 +21,23 @@ async def create_shift_period(db: Annotated[Session, Depends(session)],
 
     shift_period = ShiftPeriodService().create_shift_period(db=db, data=data)
     return shift_period
-    
+
+  
 @shift_period.patch("/update/{period_id}")
 async def update_shift_period(db: Annotated[Session,  Depends(session)],
                               period_id: int,
                               update_data: Annotated[ShiftPeriodUpdate, Body()],
                               _: str= Depends(required_roles(UserRole.admin, UserRole.manager))
                                 ):
-    crud_shift = CRUDBase[ShiftPeriod, ShiftPeriodIn, ShiftPeriodUpdate](ShiftPeriod)
-    shift_period = db.query(ShiftPeriod).get(period_id)
-    if not shift_period:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Shift period not found")
-    updated_shift = crud_shift.update(db, shift_period, update_data)
-    return ShiftOut(
-            id=updated_shift.id,
-            shift_name=updated_shift.shift_name,
-            start_time=updated_shift.start_time,
-            end_time=updated_shift.end_time
-        )
+    
+
+    updated_shift_period = ShiftPeriodService().update_shift_period(db=db, data=update_data, period_id=period_id)
+    return updated_shift_period
 
 @shift_period.delete("/delete/{period_id}", status_code=204)
 async def delete_shift_period(db: Annotated[Session, Depends(session)],
                               period_id: int,
-                              _: str= Depends(required_roles(UserRole.admin, UserRole.manager))):
-    crud_shift = CRUDBase[ShiftPeriod, ShiftPeriodIn, ShiftPeriodUpdate](ShiftPeriod)
-    shift_period = db.query(ShiftPeriod).get(period_id)
-    if not shift_period:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Shift period not found")
-    
-    return crud_shift.delete(db, period_id)
+                              _: str= Depends(required_roles(UserRole.admin, UserRole.manager))
+                              ):
+    ShiftPeriodService().delete_shift_period(db=db, period_id=period_id)
+   
