@@ -14,7 +14,7 @@ shift_period = APIRouter(tags=["Shift Period"])
 
 # change the UserRole.enum values
 @shift_period.post("/create")
-async def create_shift_period(db: Annotated[Session, Depends(session)],
+def create_shift_period(db: Annotated[Session, Depends(session)],
                               data: Annotated[ShiftPeriodIn, Body()],
                               _: str = Depends(required_roles(UserRole.superuser))):
 
@@ -24,7 +24,7 @@ async def create_shift_period(db: Annotated[Session, Depends(session)],
 
   
 @shift_period.patch("/update/{period_id}")
-async def update_shift_period(db: Annotated[Session,  Depends(session)],
+def update_shift_period(db: Annotated[Session,  Depends(session)],
                               period_id: int,
                               update_data: Annotated[ShiftPeriodUpdate, Body()],
                               _: str= Depends(required_roles(UserRole.admin, UserRole.manager))
@@ -35,7 +35,7 @@ async def update_shift_period(db: Annotated[Session,  Depends(session)],
     return updated_shift_period
 
 @shift_period.delete("/delete/{period_id}", status_code=204)
-async def delete_shift_period(db: Annotated[Session, Depends(session)],
+def delete_shift_period(db: Annotated[Session, Depends(session)],
                               period_id: int,
                               _: str= Depends(required_roles(UserRole.admin, UserRole.manager))
                               ):
