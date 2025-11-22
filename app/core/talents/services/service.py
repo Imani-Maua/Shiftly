@@ -45,7 +45,9 @@ class TalentService(CRUDBase[Talent, TalentIn, TalentUpdate]):
 
         return TalentOut.model_validate(updated_talent)
     
-    def get_all_talents(self, db: Session,
+
+
+def get_all_talents(db: Session,
                               name: str | None = None,
                               tal_role: str | None = None,
                               contract_type: str | None = None,
@@ -74,7 +76,7 @@ class TalentService(CRUDBase[Talent, TalentIn, TalentUpdate]):
         
         return query.all()
     
-    def get_talent(self, db: Session, id: int):
+def get_talent(db: Session, id: int):
         talent = db.query(Talent).filter(Talent.id == id).first()
         if not talent:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Talent not found")
