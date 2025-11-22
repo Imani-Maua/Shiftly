@@ -21,9 +21,9 @@ class Talent(Base):
     start_date: Mapped[Optional[date]] = mapped_column(Date)
     end_date: Mapped[Optional[date]] = mapped_column(Date)
 
-    requests: Mapped[List["Request"]] = relationship(back_populates="talent")
-    constraints: Mapped[List["TalentConstraint"]] = relationship(back_populates="talent")
-    scheduled_shifts: Mapped[List["ScheduledShift"]] = relationship(back_populates="talent")
+    requests: Mapped[List["Request"]] = relationship(back_populates="talent", cascade="all, delete-orphan")
+    constraints: Mapped[List["TalentConstraint"]] = relationship(back_populates="talent", cascade="all, delete-orphan")
+    scheduled_shifts: Mapped[List["ScheduledShift"]] = relationship(back_populates="talent", cascade="all, delete-orphan")
 
 
 
@@ -36,7 +36,7 @@ class TalentConstraint(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=False)
 
     talent: Mapped[Optional["Talent"]] = relationship(back_populates="constraints")
-    rules: Mapped[List["ConstraintRule"]] = relationship(back_populates="constraint")
+    rules: Mapped[List["ConstraintRule"]] = relationship(back_populates="constraint", cascade="all, delete-orphan")
 
 
 
@@ -62,7 +62,7 @@ class ShiftPeriod(Base):
 
 
 
-    templates: Mapped[List["ShiftTemplate"]] = relationship(back_populates="period")
+    templates: Mapped[List["ShiftTemplate"]] = relationship(back_populates="period", cascade="all, delete-orphan")
 
 
 class ShiftTemplate(Base):
@@ -103,7 +103,7 @@ class Schedule(Base):
     week_end: Mapped[date] = mapped_column(Date)
     status: Mapped[str] = mapped_column(String, default="draft")
 
-    scheduled_shifts: Mapped[List["ScheduledShift"]] = relationship(back_populates="schedule")
+    scheduled_shifts: Mapped[List["ScheduledShift"]] = relationship(back_populates="schedule", cascade="all, delete-orphan")
 
 class Request(Base):
     __tablename__ = "requests"
