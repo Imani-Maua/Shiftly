@@ -6,8 +6,8 @@ from typing import Union, List
 from app.core.talents.schema import TalentIn, TalentUpdate, TalentOut
 from app.core.utils.crud import CRUDBase
 from app.database.models import Talent
-from app.core.talents.services.validator import validate_talent_create, validate_talent_update
-from app.core.talents.utils import set_contract_hours
+from app.core.talents.services.validator import validate_talent_create, validate_talent_update, talent_exists
+from app.core.talents.utils import set_contract_hours, search_filters
 
 
 class TalentService(CRUDBase[Talent, TalentIn, TalentUpdate]):
@@ -53,34 +53,19 @@ def get_all_talents(db: Session,
                               contract_type: str | None = None,
                               is_active: bool | None = None):
         query = db.query(Talent)
-
-        if not query:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Talent not found")
+        talent_exists(query)
+        talents = search_filters(query=query, name=name, tal_role=tal_role, contract_type=contract_type, is_active=is_active)
+        return [TalentOut.model_validate(talent) for talent in talents]
         
-        if tal_role:
-            query = query.filter(Talent.tal_role == tal_role)
-        
-        if contract_type:
-            query = query.filter(Talent.contract_type == contract_type)
-        
-        if is_active is not None:
-            query = query.filter(Talent.is_active == is_active)
-        
-        if name:
-            name_pattern = f"%{name.lower()}%"
-            query = query.filter(
-                or_(Talent.firstname.ilike(name_pattern),
-                    Talent.lastname.ilike(name_pattern),
-                    (Talent.firstname + " " + Talent.lastname).ilike(name_pattern))
-            )
-        
-        return query.all()
     
 def get_talent(db: Session, id: int):
-        talent = db.query(Talent).filter(Talent.id == id).first()
-        if not talent:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Talent not found")
-        return talent
+    talent = db.query(Talent).filter(Talent.id == id).first()
+    talent_exists(talent)
+    return TalentOut.model_validate(talent)
+
+
+     
+        
             
         
 

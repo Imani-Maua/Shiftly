@@ -39,3 +39,8 @@ def validate_talent_update(data: TalentUpdate, talent: Talent):
             return
 
 
+def talent_exists(talent: Talent):
+    if not talent:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Talent not found")
+     
+
