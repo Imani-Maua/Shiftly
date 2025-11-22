@@ -14,14 +14,14 @@ talents = APIRouter(tags=["Talents"])
 
 
 @talents.post("/create_talent")
-async def create_talent(db:Annotated[Session, Depends(session)],
+def create_talent(db:Annotated[Session, Depends(session)],
                         data: Annotated[TalentIn,Body()],
                         _: str=Depends(required_roles(UserRole.admin, UserRole.manager))):
     talents = TalentService().create_talent(db=db, data=data)
     return talents
   
 @talents.put("/update_talent/{talent_id}")
-async def update_talent(db: Annotated[Session, Depends(session)],
+def update_talent(db: Annotated[Session, Depends(session)],
                         talent_id: int,
                         data: Annotated[TalentUpdate, Body()],
                         _:str= Depends(required_roles(UserRole.admin, UserRole.manager))):
@@ -29,7 +29,7 @@ async def update_talent(db: Annotated[Session, Depends(session)],
     return talent
 
 @talents.get("/retrieve_talents")
-async def get_all_talents(db: Annotated[Session, Depends(session)], name: str | None = None, 
+def get_all_talents(db: Annotated[Session, Depends(session)], name: str | None = None, 
                           tal_role: str | None = None,
                           contract_type: str | None = None,
                           is_active: bool | None = None) -> list[TalentRead]:
