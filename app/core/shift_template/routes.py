@@ -7,7 +7,7 @@ from app.auth.schema import UserRole
 from app.database.session import session
 from app.core.shift_template.schema import TemplateIn, TemplateUpdate
 from app.core.shift_template.services.service import TemplateService, get_template, get_all_templates
-from app.database.models import ShiftTemplate
+
 
 shift_templates = APIRouter(tags=["Shift Templates"])
 
@@ -15,7 +15,7 @@ shift_templates = APIRouter(tags=["Shift Templates"])
 @shift_templates.post("/create")
 def create_template(db: Annotated[Session, Depends(session)],
                       data: Annotated[TemplateIn, Body()],
-                     # _:str= Depends(required_roles(UserRole.admin, UserRole.manager))
+                      _:str= Depends(required_roles(UserRole.admin, UserRole.manager))
                       ):
     shift_template = TemplateService().create_template(db=db, data=data)
     return shift_template
