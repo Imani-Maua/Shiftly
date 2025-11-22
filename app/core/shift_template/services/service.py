@@ -1,8 +1,10 @@
 from sqlalchemy.orm import Session
+from datetime import time
 from app.core.utils.crud import CRUDBase
 from app.database.models import ShiftPeriod, ShiftTemplate
 from app.core.shift_template.schema import TemplateIn, TemplateOut, TemplateUpdate
-from app.core.shift_template.services.validators import validate_shift_template, validate_shift_template_update, validate_template_delete
+from app.core.shift_template.services.validators import validate_shift_template, validate_shift_template_update, template_exists
+from app.core.shift_template.utils import search_filters
 
 
 #one of the issues with creating shift templates is that we want to allow the user
@@ -31,7 +33,23 @@ class TemplateService(CRUDBase[ShiftTemplate, TemplateIn, TemplateUpdate]):
     
     def delete_template(self, db: Session, template_id: int):
         template = db.query(ShiftTemplate).filter(ShiftTemplate.id == template_id).first()
-        validate_template_delete(template)
+        template_exists(template)
         self.delete(db=db, id=template_id)
 
 
+def get_template(db: Session, id: int):
+    template = db.query(ShiftTemplate).filter(ShiftTemplate.id == id).first()
+    template_exists(template)
+    return TemplateOut.model_validate(template)
+
+
+
+def get_all_templates(db: Session,
+                   shift_name: str | None = None,
+                   shift_start: time | None = None,
+                   shift_end: time | None = None):
+    query = db.query(ShiftTemplate).join(ShiftTemplate.period)
+    template_exists(query)
+    templates = search_filters(query=query,shift_name=shift_name,shift_end=shift_end,shift_start=shift_start)
+    return [TemplateOut.model_validate(template) for template in templates]
+            

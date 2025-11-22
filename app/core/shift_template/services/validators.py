@@ -4,6 +4,7 @@ from app.database.models import ShiftPeriod, ShiftTemplate
 
 
 
+
 def validate_shift_template(data: TemplateIn, period: ShiftPeriod):
     if not period:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
@@ -57,9 +58,13 @@ def validate_shift_template_update(data: TemplateUpdate, template: ShiftTemplate
                             detail="Start time cannot be after end time")
     
     
-def validate_template_delete(template: ShiftTemplate):
+def template_exists(template: ShiftTemplate):
     if not template:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Shift template not found")
+
+
+
+    
 
 
 
